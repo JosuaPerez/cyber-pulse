@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # 1. El servicio de plantillas visuales
+  plantillas-vite:
+    build: 
+      context: ../cyberpulse-templates
+    ports:
+      - "5173:5173"
+    networks:
+      - cyberpulse_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:5173/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # 2. El Centinela Principal
+  bot-python:
+    build:
+      context: .
+    env_file:
+      - .env  # Inyecta tus credenciales
+    depends_on:
+      plantillas-vite:
+        condition: service_healthy
+    environment:
+      TEMPLATES_BASE_URL: http://plantillas-vite:5173
+    volumes:
+      - ./data:/bot/data
+      - ./media:/bot/media
+    networks:
+      - cyberpulse_net
+    restart: unless-stopped
+
+networks:
+  cyberpulse_net:
+    driver: bridge
