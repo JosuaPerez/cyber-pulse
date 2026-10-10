@@ -15,6 +15,13 @@ TEMA = {
     "usado": False,
 }
 
+TEMA_CHEATSHEET = {
+    "id": "nmap-reconocimiento-basico",
+    "tipo": "cheatsheet",
+    "brief": "Comandos seguros de nmap para auditorías autorizadas.",
+    "usado": False,
+}
+
 
 def analisis_educativo_valido(**cambios):
     datos = {
@@ -81,3 +88,37 @@ def test_respuesta_con_cve_se_rechaza():
     ])
     analizar_tema_educativo(cliente, TEMA)
     assert "no puede incluir CVEs" in cliente.llamadas[1][0]
+
+
+def test_cheatsheet_devuelve_items_y_no_narrativa_de_riesgos():
+    respuesta = analisis_educativo_valido(
+        riesgos=[],
+        mitigacion=[],
+        items=[
+            {"sintaxis": "nmap -sV", "explicacion": "Detecta servicios y sus versiones."},
+            {"sintaxis": "nmap -O", "explicacion": "Ayuda a identificar el sistema operativo."},
+            {"sintaxis": "nmap -sS", "explicacion": "Realiza un escaneo TCP SYN controlado."},
+        ],
+    )
+
+    datos = analizar_tema_educativo(
+        ClienteFalso([respuesta]),
+        TEMA_CHEATSHEET,
+    )
+
+    assert datos["meta"]["familia"] == "educativo"
+    assert datos["meta"]["tipo"] == "cheatsheet"
+    assert datos["items"] == [
+        {"sintaxis": "nmap -sV", "explicacion": "Detecta servicios y sus versiones."},
+        {"sintaxis": "nmap -O", "explicacion": "Ayuda a identificar el sistema operativo."},
+        {"sintaxis": "nmap -sS", "explicacion": "Realiza un escaneo TCP SYN controlado."},
+    ]
+
+
+def test_prompt_cheatsheet_pide_items_y_no_riesgos():
+    prompt = analizador_educativo.construir_system_prompt(TEMA_CHEATSHEET)
+
+    assert "items: exactamente 3 a 4 objetos" in prompt
+    assert "sintaxis exacta" in prompt
+    assert "riesgos y mitigacion: listas vacías" in prompt
+    assert "riesgos: exactamente 3 consecuencias" not in prompt

@@ -29,6 +29,17 @@ PATRON_ESTADISTICA = re.compile(
 def construir_system_prompt(tema: dict) -> str:
     """Construye instrucciones específicas para el tema evergreen recibido."""
     tipo = tema.get("tipo", "")
+    es_formato_items = tipo in {"cheatsheet", "checklist"}
+    campos_items = """
+- items: exactamente 3 a 4 objetos; cada uno debe tener sintaxis exacta y una explicacion de una sola línea (máximo 90 caracteres), sin párrafos.
+- riesgos y mitigacion: listas vacías; no los desarrolles para este formato.
+""" if es_formato_items else """
+- riesgos: exactamente 3 consecuencias o errores relevantes, de máximo {riesgo_limite} car. cada uno.
+- mitigacion: exactamente 3 acciones o pasos defensivos, de máximo {mitigacion_limite} car. cada uno.
+""".format(
+        riesgo_limite=int(90 * MARGEN_PROMPT),
+        mitigacion_limite=int(100 * MARGEN_PROMPT),
+    )
     return f"""Eres el creador de contenido educativo evergreen de CyberPulse (@CyberPulse89), una cuenta de ciberseguridad en español para estudiantes y profesionales de Blue Team.
 
 TEMA:
@@ -52,8 +63,7 @@ CAMPOS:
 - portada_subtitulo (máx {int(110 * MARGEN_PROMPT)} car.): promesa educativa concreta.
 - problema (máx {int(320 * MARGEN_PROMPT)} car.): contexto del concepto o problema.
 - dato_tecnico (máx {int(220 * MARGEN_PROMPT)} car.): explicación técnica general, sin cifras inventadas.
-- riesgos: exactamente 3 consecuencias o errores relevantes, de máximo {int(90 * MARGEN_PROMPT)} car. cada uno.
-- mitigacion: exactamente 3 acciones o pasos defensivos, de máximo {int(100 * MARGEN_PROMPT)} car. cada uno.
+{campos_items}
 - caption (máx {int(1000 * MARGEN_PROMPT)} car.): texto para Instagram, sin hashtags ni fuente, terminado en pregunta.
 - hashtags: de 3 a 5 strings, cada uno comenzando con # y sin espacios.
 - hilo_x: exactamente 3 tweets educativos, sin numeración ni enlaces, de máximo {int(225 * MARGEN_PROMPT)} car. cada uno.
@@ -84,6 +94,7 @@ def analizar_tema_educativo(client, tema: dict, modelo: str = MODELO) -> dict:
     """Analiza un tema evergreen y devuelve el formato legacy del carrusel."""
     if tema.get("tipo") not in TIPOS_EDUCATIVOS:
         raise ValueError(f"Tipo educativo inválido: {tema.get('tipo')!r}")
+    tipo = tema["tipo"]
 
     config = types.GenerateContentConfig(
         system_instruction=construir_system_prompt(tema),
@@ -108,11 +119,26 @@ def analizar_tema_educativo(client, tema: dict, modelo: str = MODELO) -> dict:
             if problemas:
                 raise ValueError("; ".join(problemas))
 
-            return a_formato_legacy(
+            datos = a_formato_legacy(
                 analisis,
                 "CyberPulse Educación",
                 f"educativo://{tema['id']}",
             )
+            datos["meta"]["familia"] = "educativo"
+            datos["meta"]["tipo"] = tema["tipo"]
+            if tipo in {"cheatsheet", "checklist"}:
+                if not analisis.items or not 3 <= len(analisis.items) <= 4:
+                    raise ValueError(
+                        "el formato cheatsheet/checklist requiere entre 3 y 4 items"
+                    )
+                datos["items"] = [
+                    {
+                        "sintaxis": item.sintaxis.strip(),
+                        "explicacion": item.explicacion.strip(),
+                    }
+                    for item in analisis.items
+                ]
+            return datos
         except ValueError as e:
             ultimo_error = _resumir_errores(e) if isinstance(e, ValidationError) else str(e)
             log.warning("Intento %d/%d rechazado: %s", intento, MAX_INTENTOS, ultimo_error)

@@ -12,6 +12,8 @@ LIMITES = {
     "portada_subtitulo": 110,
     "problema": 320,
     "dato_tecnico": 220,
+    "sintaxis": 120,
+    "explicacion_item": 90,
     "riesgo": 90,       # por punto
     "mitigacion": 100,  # por punto
     "caption": 1000,
@@ -20,6 +22,11 @@ LIMITES = {
 
 PATRON_CVE = re.compile(r"CVE-\d{4}-\d{4,7}", re.IGNORECASE)
 PATRON_HASHTAG = re.compile(r"^#\w{2,30}$")
+
+
+class ItemCheatsheet(BaseModel):
+    sintaxis: str
+    explicacion: str
 
 
 class AnalisisIA(BaseModel):
@@ -38,6 +45,7 @@ class AnalisisIA(BaseModel):
     dato_tecnico: str
     riesgos: list[str]
     mitigacion: list[str]
+    items: list["ItemCheatsheet"] | None = None
     caption: str
     hashtags: list[str]
     hilo_x: list[str]
@@ -66,15 +74,26 @@ class AnalisisIA(BaseModel):
         if "#" in self.caption:
             errores.append("caption no debe incluir hashtags (van en el campo hashtags)")
 
-        if len(self.riesgos) != 3:
-            errores.append("riesgos debe tener exactamente 3 puntos")
-        for i, r in enumerate(self.riesgos, 1):
-            largo(f"riesgos[{i}]", r, LIMITES["riesgo"])
+        if self.items is None:
+            if len(self.riesgos) != 3:
+                errores.append("riesgos debe tener exactamente 3 puntos")
+            for i, r in enumerate(self.riesgos, 1):
+                largo(f"riesgos[{i}]", r, LIMITES["riesgo"])
 
-        if len(self.mitigacion) != 3:
-            errores.append("mitigacion debe tener exactamente 3 puntos")
-        for i, m in enumerate(self.mitigacion, 1):
-            largo(f"mitigacion[{i}]", m, LIMITES["mitigacion"])
+            if len(self.mitigacion) != 3:
+                errores.append("mitigacion debe tener exactamente 3 puntos")
+            for i, m in enumerate(self.mitigacion, 1):
+                largo(f"mitigacion[{i}]", m, LIMITES["mitigacion"])
+        else:
+            if not 3 <= len(self.items) <= 4:
+                errores.append("items debe tener entre 3 y 4 elementos")
+            for i, item in enumerate(self.items, 1):
+                largo(f"items[{i}].sintaxis", item.sintaxis, LIMITES["sintaxis"])
+                largo(
+                    f"items[{i}].explicacion",
+                    item.explicacion,
+                    LIMITES["explicacion_item"],
+                )
 
         if len(self.hilo_x) != 3:
             errores.append("hilo_x debe tener exactamente 3 tweets")
@@ -116,6 +135,7 @@ def a_formato_legacy(a: AnalisisIA, fuente_nombre: str, fuente_url: str) -> dict
         "caption": caption,
         "hilo_x": hilo,
         "meta": {
+            "familia": "alerta",
             "severidad": a.severidad,
             "estado_explotacion": a.estado_explotacion,
             "cves": a.cves,

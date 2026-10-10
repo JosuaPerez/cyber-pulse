@@ -54,6 +54,14 @@ def inicializar_db(db_path=None) -> None:
             )
             """
         )
+        conexion.execute(
+            """
+            CREATE TABLE IF NOT EXISTS temas_educativos_usados (
+                tema_id TEXT PRIMARY KEY,
+                usado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
 
 
 def ya_procesada(clave_historial, db_path=None) -> bool:
@@ -65,6 +73,29 @@ def ya_procesada(clave_historial, db_path=None) -> bool:
             (clave_historial,),
         ).fetchone()
     return fila is not None
+
+
+def tema_ya_usado(tema_id, db_path=None) -> bool:
+    inicializar_db(db_path)
+    with _conectar(db_path) as conexion:
+        fila = conexion.execute(
+            "SELECT 1 FROM temas_educativos_usados WHERE tema_id = ? LIMIT 1",
+            (tema_id,),
+        ).fetchone()
+    return fila is not None
+
+
+def marcar_tema_usado(tema_id, db_path=None) -> None:
+    inicializar_db(db_path)
+    with _conectar(db_path) as conexion:
+        conexion.execute(
+            """
+            INSERT INTO temas_educativos_usados (tema_id)
+            VALUES (?)
+            ON CONFLICT(tema_id) DO NOTHING
+            """,
+            (tema_id,),
+        )
 
 
 def registrar_deteccion(clave_historial, titulo, db_path=None) -> None:

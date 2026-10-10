@@ -1,6 +1,6 @@
 import React from 'react';
 
-const PostInstagram = ({ level, type, category, title, description, summary, currentSlide = 1, totalSlides = 5 }) => {
+const PostInstagram = ({ familia = 'alerta', level, type, category, title, description, summary, currentSlide = 1, totalSlides = 5 }) => {
   const themeColors = {
     basic: { border: 'border-green-500', text: 'text-green-400', bg: 'bg-green-500/10', glow: 'shadow-[0_0_50px_rgba(34,197,94,0.15)]', bgGlow: 'bg-green-500', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /> },
     intermediate: { border: 'border-yellow-500', text: 'text-yellow-400', bg: 'bg-yellow-500/10', glow: 'shadow-[0_0_50px_rgba(234,179,8,0.15)]', bgGlow: 'bg-yellow-500', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /> },
@@ -10,7 +10,22 @@ const PostInstagram = ({ level, type, category, title, description, summary, cur
 
   themeColors.medium = themeColors.intermediate;
 
-  const theme = themeColors[level] || themeColors.critical;
+  const isEducativo = familia === 'educativo';
+  const educativoTheme = {
+    border: 'border-cyan-500',
+    text: 'text-cyan-400',
+    bg: 'bg-cyan-500/10',
+    glow: 'shadow-[0_0_50px_rgba(6,182,212,0.15)]',
+    bgGlow: 'bg-cyan-500',
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM4 5.5A2.5 2.5 0 016.5 8H20M8 12h8m-8 4h5" />,
+  };
+  const theme = isEducativo ? educativoTheme : (themeColors[level] || themeColors.critical);
+  const detailPromptClass = isEducativo ? 'text-cyan-400' : 'text-green-500';
+  const impactCardClass = isEducativo
+    ? 'bg-cyan-950/20 border-cyan-900/40 hover:bg-cyan-950/40'
+    : 'bg-red-950/20 border-red-900/40 hover:bg-red-950/40';
+  const impactIconClass = isEducativo ? 'text-cyan-400' : 'text-red-500';
+  const saveTextClass = isEducativo ? 'text-cyan-400' : 'text-yellow-400';
   const progressWidth = `${(currentSlide / totalSlides) * 100}%`;
 
   const renderHighlighted = (text) => {
@@ -123,9 +138,52 @@ const PostInstagram = ({ level, type, category, title, description, summary, cur
                 <div className="w-6 h-6 rounded-full bg-green-500"></div>
               </div>
               <p className="text-[2.2rem] text-slate-200 leading-relaxed font-mono">
-                <span className="text-green-500 font-bold">root@cyberpulse:~#</span> ./analyze<br /><br />
+                <span className={`${detailPromptClass} font-bold`}>root@cyberpulse:~#</span> ./analyze<br /><br />
                 <span className="text-slate-400"> </span>{renderHighlighted(description)}
               </p>
+            </div>
+          )}
+
+          {type === 'command_pair' && (
+            <div className="flex flex-col gap-6">
+              {summary.map((item, index) => (
+                <div key={index} className="bg-[#0D1117] p-8 rounded-2xl border border-slate-700 shadow-2xl">
+                  <div className="flex gap-3 mb-5 border-b border-slate-800 pb-4">
+                    <div className="w-5 h-5 rounded-full bg-red-500"></div>
+                    <div className="w-5 h-5 rounded-full bg-yellow-500"></div>
+                    <div className="w-5 h-5 rounded-full bg-green-500"></div>
+                  </div>
+                  <p className="text-[1.8rem] text-slate-200 leading-relaxed font-mono">
+                    <span className={`${detailPromptClass} font-bold`}>root@cyberpulse:~#</span>{' '}
+                    {item.sintaxis}
+                  </p>
+                  <p className="text-2xl text-slate-300 leading-snug mt-4">
+                    {item.explicacion}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {type === 'pro_tip' && (
+            <div className={`p-12 rounded-3xl border ${theme.border} ${theme.bg} shadow-2xl`}>
+              <p className="text-4xl text-slate-200 leading-relaxed font-medium">
+                {renderHighlighted(description)}
+              </p>
+            </div>
+          )}
+
+          {type === 'recap' && (
+            <div className="flex flex-col gap-5">
+              {summary.map((item, index) => (
+                <div key={index} className="flex items-start gap-5 bg-slate-900/80 p-6 rounded-2xl border border-slate-700">
+                  <span className={`font-mono text-2xl font-bold ${theme.text}`}>{index + 1}</span>
+                  <div>
+                    <p className={`font-mono text-2xl font-bold ${theme.text}`}>{item.sintaxis}</p>
+                    <p className="text-2xl text-slate-300 leading-snug mt-2">{item.explicacion}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -135,8 +193,8 @@ const PostInstagram = ({ level, type, category, title, description, summary, cur
               <p className="text-4xl text-slate-300 leading-snug mb-10">{renderHighlighted(description)}</p>
               <div className="grid grid-cols-1 gap-8">
                 {summary.map((risk, index) => (
-                  <div key={index} className="flex items-center gap-8 bg-red-950/20 p-8 rounded-2xl border border-red-900/40 shadow-lg hover:bg-red-950/40 transition-colors">
-                    <div className="text-red-500 flex-shrink-0">
+                  <div key={index} className={`flex items-center gap-8 p-8 rounded-2xl border shadow-lg transition-colors ${impactCardClass}`}>
+                    <div className={`${impactIconClass} flex-shrink-0`}>
                       <svg className="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                     </div>
                     <p className="text-4xl text-slate-200 leading-snug">{renderHighlighted(risk)}</p>
@@ -180,7 +238,7 @@ const PostInstagram = ({ level, type, category, title, description, summary, cur
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
           </p>
         ) : (
-          <p className="flex items-center gap-4 text-white font-bold tracking-widest text-2xl text-yellow-400">
+          <p className={`flex items-center gap-4 text-white font-bold tracking-widest text-2xl ${saveTextClass}`}>
             GUARDA ESTE POST
             <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
           </p>

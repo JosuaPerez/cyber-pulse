@@ -3,7 +3,9 @@ import json
 from app.historial_db import (
     actualizar_estado,
     inicializar_db,
+    marcar_tema_usado,
     registrar_deteccion,
+    tema_ya_usado,
     ya_procesada,
 )
 
@@ -98,3 +100,23 @@ def test_actualizar_estado_incrementa_intentos_y_serializa_cves(tmp_path):
 
     assert json.loads(fila[0]) == ["CVE-2026-12345"]
     assert fila[1:] == ("high", "fallida", 2, "Fallo de red")
+
+
+def test_tracking_de_temas_educativos_es_persistente_e_idempotente(tmp_path):
+    db_path = tmp_path / "historial.sqlite3"
+
+    assert not tema_ya_usado("tema-1", db_path)
+    marcar_tema_usado("tema-1", db_path)
+    marcar_tema_usado("tema-1", db_path)
+
+    assert tema_ya_usado("tema-1", db_path)
+    assert not tema_ya_usado("tema-2", db_path)
+
+    import sqlite3
+
+    with sqlite3.connect(db_path) as conexion:
+        filas = conexion.execute(
+            "SELECT tema_id FROM temas_educativos_usados"
+        ).fetchall()
+
+    assert filas == [("tema-1",)]

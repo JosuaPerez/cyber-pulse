@@ -5,10 +5,19 @@ from google import genai
 from app import config
 from app.analizador_educativo import analizar_tema_educativo
 from app.generador import generar_imagenes_carrusel
-from app.temas_educativos import marcar_usado, siguiente_tema_pendiente
+from app.historial_db import marcar_tema_usado, tema_ya_usado
+from app.temas_educativos import TEMAS_EDUCATIVOS
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 log = logging.getLogger("cyberpulse.bot_educativo")
+
+
+def siguiente_tema_pendiente():
+    """Devuelve el primer tema no registrado como usado en SQLite."""
+    return next(
+        (tema for tema in TEMAS_EDUCATIVOS if not tema_ya_usado(tema["id"])),
+        None,
+    )
 
 
 def escribir_post_pendiente(datos: dict) -> None:
@@ -44,7 +53,7 @@ def ejecutar() -> None:
     if len(rutas) != 5:
         raise RuntimeError(f"Se esperaban 5 imágenes, se generaron {len(rutas)}")
     escribir_post_pendiente(datos)
-    marcar_usado(tema["id"])
+    marcar_tema_usado(tema["id"])
     log.info("Tema educativo marcado como usado: %s", tema["id"])
 
 

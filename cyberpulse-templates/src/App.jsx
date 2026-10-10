@@ -21,6 +21,7 @@ function App() {
     // Guardamos los datos asegurándonos de extraer el 'type' correcto
     setPostData({
       type: params.get('type') || 'cover',
+      familia: params.get('familia') || 'alerta',
       level: params.get('level') || 'critical',
       category: params.get('category') || 'CYBERPULSE',
       title: params.get('title') || 'Error: Sin título',
