@@ -139,9 +139,17 @@ def generar_imagenes_carrusel(datos_ia):
                 "type": "tip_bullets",
                 "level": severidad,
                 "familia": familia,
-                "category": "RECUERDA",
+                "category": "RECUERDA 1-2",
                 "title": "Qué debes recordar",
-                "summary": json.dumps(datos_ia.get("tip_bullets", []), ensure_ascii=False),
+                "summary": json.dumps(datos_ia.get("tip_bullets", [])[:2], ensure_ascii=False),
+            },
+            {
+                "type": "tip_bullets",
+                "level": severidad,
+                "familia": familia,
+                "category": "RECUERDA 3-4",
+                "title": "Llévatelo contigo",
+                "summary": json.dumps(datos_ia.get("tip_bullets", [])[2:], ensure_ascii=False),
             },
         ]
     else:

@@ -8,8 +8,9 @@ function App() {
     // Leemos la URL exacta que Playwright está visitando
     const params = new URLSearchParams(window.location.search);
     
-    // Decodificamos las viñetas del JSON
-    let parsedSummary = [];
+    // Decodificamos el resumen con la forma esperada por cada layout.
+    const type = params.get('type') || 'cover';
+    let parsedSummary = type === 'tip_content' ? {} : [];
     if (params.get('summary')) {
       try {
         parsedSummary = JSON.parse(params.get('summary'));
@@ -20,7 +21,7 @@ function App() {
 
     // Guardamos los datos asegurándonos de extraer el 'type' correcto
     setPostData({
-      type: params.get('type') || 'cover',
+      type,
       familia: params.get('familia') || 'alerta',
       level: params.get('level') || 'critical',
       category: params.get('category') || 'CYBERPULSE',

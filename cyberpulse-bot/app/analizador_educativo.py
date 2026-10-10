@@ -14,7 +14,7 @@ from app.glosario import glosario_para_prompt
 
 log = logging.getLogger("cyberpulse.analizador_educativo")
 
-MODELO = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
+MODELO = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 MAX_INTENTOS = 3
 ESPERA_BASE_API = 10
 MARGEN_PROMPT = 0.85
