@@ -18,7 +18,7 @@ MODELO = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
 MAX_INTENTOS = 3
 ESPERA_BASE_API = 10
 MARGEN_PROMPT = 0.85
-TIPOS_EDUCATIVOS = {"concepto", "cheatsheet", "checklist", "comparativa"}
+TIPOS_EDUCATIVOS = {"concepto", "cheatsheet", "checklist", "comparativa", "tip"}
 PATRON_CVE = re.compile(r"\bCVE-\d{4}-\d{4,7}\b", re.IGNORECASE)
 PATRON_ESTADISTICA = re.compile(
     r"\b\d+(?:[.,]\d+)?\s*%|\b(?:más de|menos de|al menos|aproximadamente)\s+\d+",
@@ -39,6 +39,13 @@ def construir_system_prompt(tema: dict) -> str:
 - items_checklist: exactamente 4 a 6 objetos; cada uno debe tener un campo paso con una acción breve de verificación (máximo 100 caracteres). Escribe pasos accionables en lenguaje natural, sin sintaxis de comandos, código ni prompts de terminal.
 - items: null; riesgos y mitigacion: listas vacías; no los desarrolles para este formato.
 """
+    elif tipo == "tip":
+        campos_items = """
+- tip_slides: exactamente 2 objetos. Cada uno debe tener texto breve (máximo 110 caracteres), 2 a 4 chips de texto corto (máximo 15 caracteres cada uno) y 2 a 3 stat-blocks con valor (máximo 10 caracteres) y etiqueta (máximo 20 caracteres).
+- tip_bullets: exactamente 3 a 4 bullets accionables o memorables, de máximo 60 caracteres cada uno.
+- Los stat-blocks deben ser cualitativos o expresar conocimiento general aceptado (por ejemplo, "ALTO" / "Riesgo"). No inventes porcentajes, conteos, fechas ni métricas. Si no existe un valor general confiable, usa un valor cualitativo, no una cifra inventada.
+- items, items_checklist, riesgos y mitigacion: listas vacías; no los desarrolles para este formato.
+"""
     else:
         campos_items = """
 - riesgos: exactamente 3 consecuencias o errores relevantes, de máximo {riesgo_limite} car. cada uno.
@@ -55,7 +62,7 @@ TEMA:
 REGLAS:
 1. El contenido es atemporal y educativo; no lo trates como una noticia ni inventes una fuente.
 2. La slide 1 debe comenzar con un GANCHO fuerte que capte la atención durante los primeros 5-8 segundos de lectura.
-3. Si el tipo es "cheatsheet", usa comandos seguros con sintaxis exacta. Si el tipo es "checklist", usa pasos de verificación en lenguaje natural, sin sintaxis de comandos.
+3. Si el tipo es "cheatsheet", usa comandos seguros con sintaxis exacta. Si el tipo es "checklist", usa pasos de verificación en lenguaje natural, sin sintaxis de comandos. Si el tipo es "tip", usa contenido breve de alta recordación, sin comandos, checklist ni desarrollo narrativo largo.
 4. Evita cualquier cifra, estadística o afirmación específica que no sea conocimiento general aceptado en el campo. No inventes CVEs, porcentajes, casos "según estudios" ni datos concretos; si el tema requiere uno, omítelo.
 5. No incluyas CVEs en ningún campo. No incluyas exploits ni PoC funcionales.
 6. El caption debe terminar con una pregunta breve y directa relacionada con el tema; no incluyas hashtags ni fuente.
@@ -153,6 +160,32 @@ def analizar_tema_educativo(client, tema: dict, modelo: str = MODELO) -> dict:
                 datos["items_checklist"] = [
                     {"paso": item.paso.strip()}
                     for item in analisis.items_checklist
+                ]
+            elif tipo == "tip":
+                if not analisis.tip_slides or len(analisis.tip_slides) != 2:
+                    raise ValueError("el formato tip requiere exactamente 2 tip_slides")
+                if not analisis.tip_bullets or not 3 <= len(analisis.tip_bullets) <= 4:
+                    raise ValueError(
+                        "el formato tip requiere entre 3 y 4 tip_bullets"
+                    )
+                datos["tip_slides"] = [
+                    {
+                        "texto": slide.texto.strip(),
+                        "chips": [
+                            {"texto": chip.texto.strip()} for chip in slide.chips
+                        ],
+                        "stats": [
+                            {
+                                "valor": stat.valor.strip(),
+                                "etiqueta": stat.etiqueta.strip(),
+                            }
+                            for stat in slide.stats
+                        ],
+                    }
+                    for slide in analisis.tip_slides
+                ]
+                datos["tip_bullets"] = [
+                    bullet.strip() for bullet in analisis.tip_bullets
                 ]
             return datos
         except ValueError as e:

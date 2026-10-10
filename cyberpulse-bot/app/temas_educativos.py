@@ -63,4 +63,28 @@ TEMAS_EDUCATIVOS = [
             "entienda por qué un 9.8 es grave y un 4.2 no lo es tanto."
         ),
     },
+    {
+        "id": "senales-de-phishing",
+        "tipo": "tip",
+        "brief": (
+            "Contenido breve y visual para reconocer señales comunes de phishing en mensajes "
+            "de correo o mensajería: urgencia artificial, dominio parecido pero falso, "
+            "solicitud inesperada de credenciales y enlaces que no coinciden con el destino. "
+            "Enfoque de crecimiento de audiencia: mito vs realidad y recordatorios fáciles "
+            "de compartir. No usar comandos, CVEs, porcentajes inventados ni estadísticas; "
+            "los stat-blocks deben ser cualitativos o de conocimiento general."
+        ),
+    },
+    {
+        "id": "errores-comunes-exponer-puertos",
+        "tipo": "tip",
+        "brief": (
+            "Contenido breve sobre errores comunes al exponer servicios a internet: publicar "
+            "paneles administrativos sin necesidad, dejar servicios de prueba accesibles, "
+            "no restringir por red de origen y olvidar revisar cambios temporales. Presentarlo "
+            "como señales de riesgo y correcciones memorables para un público amplio de Blue "
+            "Team. No incluir comandos, checklist detallado, CVEs, porcentajes inventados ni "
+            "métricas no verificadas; usar stat-blocks cualitativos o conocimiento general."
+        ),
+    },
 ]

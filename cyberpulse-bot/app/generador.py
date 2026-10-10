@@ -16,6 +16,7 @@ def generar_imagenes_carrusel(datos_ia):
     es_educativo = familia == "educativo"
     es_cheatsheet = es_educativo and tipo == "cheatsheet"
     es_checklist = es_educativo and tipo == "checklist"
+    es_tip = es_educativo and tipo == "tip"
     categoria_portada = "CYBERPULSE EDUCA" if es_educativo else "ALERTA CYBERPULSE"
     categorias = (
         ["CONCEPTO", "EN DETALLE", "PUNTOS CLAVE", "APLÍCALO"]
@@ -110,6 +111,37 @@ def generar_imagenes_carrusel(datos_ia):
                 "category": "CHECKLIST COMPLETO",
                 "title": "Revisión completa",
                 "summary": json.dumps(pasos, ensure_ascii=False),
+            },
+        ]
+    elif es_tip:
+        tip_slides = datos_ia.get("tip_slides", [])
+        slides_config = [
+            {
+                "type": "cover",
+                "level": severidad,
+                "familia": familia,
+                "category": categoria_portada,
+                "title": datos_ia["slide_1"]["title"],
+                "description": datos_ia["slide_1"]["description"],
+            },
+            *[
+                {
+                    "type": "tip_content",
+                    "level": severidad,
+                    "familia": familia,
+                    "category": f"TIP {indice}",
+                    "title": f"Señal clave {indice}",
+                    "summary": json.dumps(slide, ensure_ascii=False),
+                }
+                for indice, slide in enumerate(tip_slides, 1)
+            ],
+            {
+                "type": "tip_bullets",
+                "level": severidad,
+                "familia": familia,
+                "category": "RECUERDA",
+                "title": "Qué debes recordar",
+                "summary": json.dumps(datos_ia.get("tip_bullets", []), ensure_ascii=False),
             },
         ]
     else:

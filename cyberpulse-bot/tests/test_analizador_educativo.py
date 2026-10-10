@@ -28,6 +28,12 @@ TEMA_CHECKLIST = {
     "brief": "Pasos defensivos para revisar logs HTTP.",
 }
 
+TEMA_TIP = {
+    "id": "senales-de-phishing",
+    "tipo": "tip",
+    "brief": "Señales breves para reconocer phishing.",
+}
+
 
 def analisis_educativo_valido(**cambios):
     datos = {
@@ -179,3 +185,95 @@ def test_checklist_usa_campo_y_prompt_semanticos():
         {"paso": "Confirma que las rutas sensibles exijan autenticación"},
     ]
     assert "items" not in datos
+
+
+def test_esquema_tip_valida_cardinalidades_y_longitudes():
+    base = json.loads(analisis_educativo_valido())
+    base["riesgos"] = []
+    base["mitigacion"] = []
+    base["tip_slides"] = [
+        {
+            "texto": "La urgencia busca que actúes sin revisar.",
+            "chips": [{"texto": "Urgencia"}, {"texto": "Presión"}],
+            "stats": [
+                {"valor": "ALTO", "etiqueta": "Riesgo"},
+                {"valor": "DUDOSO", "etiqueta": "Remitente"},
+            ],
+        },
+        {
+            "texto": "Un enlace puede ocultar un destino distinto.",
+            "chips": [{"texto": "Enlace"}, {"texto": "Destino"}],
+            "stats": [
+                {"valor": "ANTES", "etiqueta": "Revisa"},
+                {"valor": "SIEMPRE", "etiqueta": "Confirma"},
+            ],
+        },
+    ]
+    base["tip_bullets"] = ["Pausa antes de hacer clic", "Revisa el remitente", "Confirma por otro canal"]
+
+    analisis = AnalisisIA.model_validate(base)
+    assert len(analisis.tip_slides) == 2
+    assert len(analisis.tip_bullets) == 3
+
+    with pytest.raises(ValueError, match="exactamente 2"):
+        AnalisisIA.model_validate({**base, "tip_slides": base["tip_slides"][:1]})
+
+    with pytest.raises(ValueError, match="entre 2 y 4"):
+        invalid = {**base, "tip_slides": [{**base["tip_slides"][0], "chips": [{"texto": "Uno"}]}, base["tip_slides"][1]]}
+        AnalisisIA.model_validate(invalid)
+
+    with pytest.raises(ValueError, match="máximo 15"):
+        invalid = {
+            **base,
+            "tip_slides": [
+                {**base["tip_slides"][0], "chips": [{"texto": "x" * 16}, {"texto": "Ok"}]},
+                base["tip_slides"][1],
+            ],
+        }
+        AnalisisIA.model_validate(invalid)
+
+    with pytest.raises(ValueError, match="máximo 60"):
+        AnalisisIA.model_validate({**base, "tip_bullets": ["x" * 61] * 3})
+
+
+def test_tip_usa_contrato_y_prompt_breve_sin_estadisticas_inventadas():
+    respuesta = analisis_educativo_valido(
+        riesgos=[],
+        mitigacion=[],
+        tip_slides=[
+            {
+                "texto": "La urgencia busca que actúes sin revisar.",
+                "chips": [{"texto": "Urgencia"}, {"texto": "Presión"}],
+                "stats": [
+                    {"valor": "ALTO", "etiqueta": "Riesgo"},
+                    {"valor": "DUDOSO", "etiqueta": "Remitente"},
+                ],
+            },
+            {
+                "texto": "Un enlace puede ocultar un destino distinto.",
+                "chips": [{"texto": "Enlace"}, {"texto": "Destino"}],
+                "stats": [
+                    {"valor": "ANTES", "etiqueta": "Revisa"},
+                    {"valor": "SIEMPRE", "etiqueta": "Confirma"},
+                ],
+            },
+        ],
+        tip_bullets=["Pausa antes de hacer clic", "Revisa el remitente", "Confirma por otro canal"],
+    )
+
+    prompt = analizador_educativo.construir_system_prompt(TEMA_TIP)
+    assert "tip_slides: exactamente 2 objetos" in prompt
+    assert "No inventes porcentajes" in prompt
+    assert "sin comandos, checklist ni desarrollo narrativo largo" in prompt
+
+    datos = analizar_tema_educativo(ClienteFalso([respuesta]), TEMA_TIP)
+
+    assert datos["meta"]["tipo"] == "tip"
+    assert len(datos["tip_slides"]) == 2
+    assert datos["tip_bullets"] == [
+        "Pausa antes de hacer clic",
+        "Revisa el remitente",
+        "Confirma por otro canal",
+    ]
+    assert "items" not in datos
+    assert "items_checklist" not in datos

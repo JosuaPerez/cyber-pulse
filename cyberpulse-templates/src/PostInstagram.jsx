@@ -20,6 +20,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
     icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM4 5.5A2.5 2.5 0 016.5 8H20M8 12h8m-8 4h5" />,
   };
   const theme = isEducativo ? educativoTheme : (themeColors[level] || themeColors.critical);
+  const isTip = type === 'tip_content' || type === 'tip_bullets';
   const detailPromptClass = isEducativo ? 'text-cyan-400' : 'text-green-500';
   const impactCardClass = isEducativo
     ? 'bg-cyan-950/20 border-cyan-900/40 hover:bg-cyan-950/40'
@@ -182,6 +183,40 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
             </div>
           )}
 
+          {type === 'tip_content' && (
+            <div className="flex flex-col gap-8">
+              <p className="text-4xl text-slate-200 leading-snug font-medium">
+                {summary.texto}
+              </p>
+              <div className="flex flex-wrap gap-4">
+                {summary.chips.map((chip, index) => (
+                  <span key={index} className={`rounded-full border-2 ${theme.border} ${theme.bg} ${theme.text} px-5 py-2 text-2xl font-bold tracking-wide`}>
+                    {chip.texto}
+                  </span>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                {summary.stats.map((stat, index) => (
+                  <div key={index} className={`rounded-2xl border ${theme.border} ${theme.bg} p-8 text-center shadow-2xl`}>
+                    <p className={`text-6xl font-extrabold ${theme.text}`}>{stat.valor}</p>
+                    <p className="text-2xl text-slate-300 leading-snug mt-3">{stat.etiqueta}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {type === 'tip_bullets' && (
+            <div className="flex flex-col gap-6">
+              {summary.map((bullet, index) => (
+                <div key={index} className="flex items-center gap-6 bg-slate-900/80 p-8 rounded-2xl border border-cyan-900/40 shadow-2xl">
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-lg ${['bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-cyan-700'][index]}`}></div>
+                  <p className="text-4xl text-slate-200 leading-snug font-medium">{bullet}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
           {type === 'pro_tip' && (
             <div className={`p-12 rounded-3xl border ${theme.border} ${theme.bg} shadow-2xl`}>
               <p className="text-4xl text-slate-200 leading-relaxed font-medium">
@@ -249,7 +284,15 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           {currentSlide} / {totalSlides}
         </p>
 
-        {type !== 'mitigation' ? (
+        {isTip && type === 'tip_bullets' ? (
+          <div className="flex items-center gap-8">
+            <p className="flex items-center gap-4 text-white font-bold tracking-widest text-2xl">
+              GUARDA ESTE POST
+              <svg className={`w-8 h-8 ${saveTextClass}`} fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+            </p>
+            <p className={`text-2xl font-bold tracking-widest ${theme.text}`}>SÍGUENOS PARA MÁS</p>
+          </div>
+        ) : type !== 'mitigation' ? (
           <p className="flex items-center gap-4 text-white animate-pulse font-bold tracking-widest text-2xl">
             DESLIZA
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>

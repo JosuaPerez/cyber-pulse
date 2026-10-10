@@ -15,6 +15,11 @@ LIMITES = {
     "sintaxis": 120,
     "explicacion_item": 90,
     "paso": 100,
+    "tip_texto": 110,
+    "chip": 15,
+    "stat_valor": 10,
+    "stat_etiqueta": 20,
+    "tip_bullet": 60,
     "riesgo": 90,       # por punto
     "mitigacion": 100,  # por punto
     "caption": 1000,
@@ -32,6 +37,21 @@ class ItemCheatsheet(BaseModel):
 
 class ItemChecklist(BaseModel):
     paso: str
+
+
+class ChipTip(BaseModel):
+    texto: str
+
+
+class StatBlock(BaseModel):
+    valor: str
+    etiqueta: str
+
+
+class SlideTip(BaseModel):
+    texto: str
+    chips: list[ChipTip]
+    stats: list[StatBlock]
 
 
 class AnalisisIA(BaseModel):
@@ -52,6 +72,8 @@ class AnalisisIA(BaseModel):
     mitigacion: list[str]
     items: list["ItemCheatsheet"] | None = None
     items_checklist: list["ItemChecklist"] | None = None
+    tip_slides: list["SlideTip"] | None = None
+    tip_bullets: list[str] | None = None
     caption: str
     hashtags: list[str]
     hilo_x: list[str]
@@ -80,7 +102,51 @@ class AnalisisIA(BaseModel):
         if "#" in self.caption:
             errores.append("caption no debe incluir hashtags (van en el campo hashtags)")
 
-        if self.items is not None and self.items_checklist is not None:
+        tip_presente = self.tip_slides is not None or self.tip_bullets is not None
+        if tip_presente:
+            if self.tip_slides is None or self.tip_bullets is None:
+                errores.append("tip_slides y tip_bullets deben aparecer juntos")
+            elif len(self.tip_slides) != 2:
+                errores.append("tip_slides debe tener exactamente 2 elementos")
+            else:
+                for i, slide in enumerate(self.tip_slides, 1):
+                    largo(f"tip_slides[{i}].texto", slide.texto, LIMITES["tip_texto"])
+                    if not 2 <= len(slide.chips) <= 4:
+                        errores.append(f"tip_slides[{i}].chips debe tener entre 2 y 4 elementos")
+                    for j, chip in enumerate(slide.chips, 1):
+                        largo(
+                            f"tip_slides[{i}].chips[{j}].texto",
+                            chip.texto,
+                            LIMITES["chip"],
+                        )
+                    if not 2 <= len(slide.stats) <= 3:
+                        errores.append(f"tip_slides[{i}].stats debe tener entre 2 y 3 elementos")
+                    for j, stat in enumerate(slide.stats, 1):
+                        largo(
+                            f"tip_slides[{i}].stats[{j}].valor",
+                            stat.valor,
+                            LIMITES["stat_valor"],
+                        )
+                        largo(
+                            f"tip_slides[{i}].stats[{j}].etiqueta",
+                            stat.etiqueta,
+                            LIMITES["stat_etiqueta"],
+                        )
+            if self.tip_bullets is not None:
+                if not 3 <= len(self.tip_bullets) <= 4:
+                    errores.append("tip_bullets debe tener entre 3 y 4 elementos")
+                for i, bullet in enumerate(self.tip_bullets, 1):
+                    largo(f"tip_bullets[{i}]", bullet, LIMITES["tip_bullet"])
+            if (
+                self.items is not None
+                or self.items_checklist is not None
+                or self.riesgos
+                or self.mitigacion
+            ):
+                errores.append(
+                    "el formato tip no puede combinarse con items, items_checklist, riesgos o mitigacion"
+                )
+        elif self.items is not None and self.items_checklist is not None:
             errores.append("items e items_checklist no pueden usarse a la vez")
         elif self.items_checklist is not None:
             if not 4 <= len(self.items_checklist) <= 6:
