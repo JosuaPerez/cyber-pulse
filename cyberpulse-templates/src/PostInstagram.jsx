@@ -165,6 +165,23 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
             </div>
           )}
 
+          {type === 'checklist_steps' && (
+            <div className="flex flex-col gap-6">
+              {summary.map((item, index) => (
+                <div key={index} className={`flex items-center gap-6 p-8 rounded-2xl border ${theme.border} ${theme.bg} shadow-2xl`}>
+                  <div className={`flex-shrink-0 w-16 h-16 rounded-xl border-2 ${theme.border} flex items-center justify-center`}>
+                    <svg className={`w-9 h-9 ${theme.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p className="text-4xl text-slate-200 leading-snug font-medium">
+                    {item.paso}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
           {type === 'pro_tip' && (
             <div className={`p-12 rounded-3xl border ${theme.border} ${theme.bg} shadow-2xl`}>
               <p className="text-4xl text-slate-200 leading-relaxed font-medium">

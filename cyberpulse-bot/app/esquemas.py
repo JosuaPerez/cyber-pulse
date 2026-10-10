@@ -14,6 +14,7 @@ LIMITES = {
     "dato_tecnico": 220,
     "sintaxis": 120,
     "explicacion_item": 90,
+    "paso": 100,
     "riesgo": 90,       # por punto
     "mitigacion": 100,  # por punto
     "caption": 1000,
@@ -27,6 +28,10 @@ PATRON_HASHTAG = re.compile(r"^#\w{2,30}$")
 class ItemCheatsheet(BaseModel):
     sintaxis: str
     explicacion: str
+
+
+class ItemChecklist(BaseModel):
+    paso: str
 
 
 class AnalisisIA(BaseModel):
@@ -46,6 +51,7 @@ class AnalisisIA(BaseModel):
     riesgos: list[str]
     mitigacion: list[str]
     items: list["ItemCheatsheet"] | None = None
+    items_checklist: list["ItemChecklist"] | None = None
     caption: str
     hashtags: list[str]
     hilo_x: list[str]
@@ -74,7 +80,14 @@ class AnalisisIA(BaseModel):
         if "#" in self.caption:
             errores.append("caption no debe incluir hashtags (van en el campo hashtags)")
 
-        if self.items is None:
+        if self.items is not None and self.items_checklist is not None:
+            errores.append("items e items_checklist no pueden usarse a la vez")
+        elif self.items_checklist is not None:
+            if not 4 <= len(self.items_checklist) <= 6:
+                errores.append("items_checklist debe tener entre 4 y 6 pasos")
+            for i, item in enumerate(self.items_checklist, 1):
+                largo(f"items_checklist[{i}].paso", item.paso, LIMITES["paso"])
+        elif self.items is None:
             if len(self.riesgos) != 3:
                 errores.append("riesgos debe tener exactamente 3 puntos")
             for i, r in enumerate(self.riesgos, 1):

@@ -14,7 +14,8 @@ def generar_imagenes_carrusel(datos_ia):
     tipo = meta.get("tipo", "")
     severidad = meta.get("severidad", "critical")
     es_educativo = familia == "educativo"
-    es_formato_items = es_educativo and tipo in {"cheatsheet", "checklist"}
+    es_cheatsheet = es_educativo and tipo == "cheatsheet"
+    es_checklist = es_educativo and tipo == "checklist"
     categoria_portada = "CYBERPULSE EDUCA" if es_educativo else "ALERTA CYBERPULSE"
     categorias = (
         ["CONCEPTO", "EN DETALLE", "PUNTOS CLAVE", "APLÍCALO"]
@@ -23,7 +24,7 @@ def generar_imagenes_carrusel(datos_ia):
     )
     
     # Mapeo exacto de los datos generados por Gemini a las propiedades de tu React Component
-    if es_formato_items:
+    if es_cheatsheet:
         items = datos_ia.get("items", [])
         slides_config = [
             {
@@ -65,6 +66,50 @@ def generar_imagenes_carrusel(datos_ia):
                 "category": "RESUMEN COMPLETO",
                 "title": "Todos los comandos",
                 "summary": json.dumps(items, ensure_ascii=False),
+            },
+        ]
+    elif es_checklist:
+        pasos = datos_ia.get("items_checklist", [])
+        slides_config = [
+            {
+                "type": "cover",
+                "level": severidad,
+                "familia": familia,
+                "category": categoria_portada,
+                "title": datos_ia["slide_1"]["title"],
+                "description": datos_ia["slide_1"]["description"],
+            },
+            {
+                "type": "checklist_steps",
+                "level": severidad,
+                "familia": familia,
+                "category": "VERIFICACIÓN 1-3",
+                "title": "Primera revisión",
+                "summary": json.dumps(pasos[:3], ensure_ascii=False),
+            },
+            {
+                "type": "checklist_steps",
+                "level": severidad,
+                "familia": familia,
+                "category": "VERIFICACIÓN 4-6",
+                "title": "Completa la revisión",
+                "summary": json.dumps(pasos[3:], ensure_ascii=False),
+            },
+            {
+                "type": "pro_tip",
+                "level": severidad,
+                "familia": familia,
+                "category": "TIP PRO",
+                "title": "Dato pro",
+                "description": datos_ia["slide_3"]["description"],
+            },
+            {
+                "type": "checklist_steps",
+                "level": severidad,
+                "familia": familia,
+                "category": "CHECKLIST COMPLETO",
+                "title": "Revisión completa",
+                "summary": json.dumps(pasos, ensure_ascii=False),
             },
         ]
     else:

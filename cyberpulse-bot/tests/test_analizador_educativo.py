@@ -22,6 +22,12 @@ TEMA_CHEATSHEET = {
     "usado": False,
 }
 
+TEMA_CHECKLIST = {
+    "id": "codigos-http-que-indican-ataque",
+    "tipo": "checklist",
+    "brief": "Pasos defensivos para revisar logs HTTP.",
+}
+
 
 def analisis_educativo_valido(**cambios):
     datos = {
@@ -122,3 +128,54 @@ def test_prompt_cheatsheet_pide_items_y_no_riesgos():
     assert "sintaxis exacta" in prompt
     assert "riesgos y mitigacion: listas vacías" in prompt
     assert "riesgos: exactamente 3 consecuencias" not in prompt
+
+
+def test_esquema_checklist_exige_de_4_a_6_pasos_y_limita_longitud():
+    base = json.loads(analisis_educativo_valido())
+    base["riesgos"] = []
+    base["mitigacion"] = []
+    base["items_checklist"] = [{"paso": f"Paso defensivo {i}"} for i in range(4)]
+    analisis = AnalisisIA.model_validate(base)
+    assert [item.paso for item in analisis.items_checklist] == [
+        "Paso defensivo 0",
+        "Paso defensivo 1",
+        "Paso defensivo 2",
+        "Paso defensivo 3",
+    ]
+
+    with pytest.raises(ValueError, match="entre 4 y 6 pasos"):
+        AnalisisIA.model_validate({**base, "items_checklist": [{"paso": "Uno"}]})
+
+    with pytest.raises(ValueError, match="máximo 100"):
+        AnalisisIA.model_validate(
+            {**base, "items_checklist": [{"paso": "x" * 101} for _ in range(4)]}
+        )
+
+
+def test_checklist_usa_campo_y_prompt_semanticos():
+    respuesta = analisis_educativo_valido(
+        riesgos=[],
+        mitigacion=[],
+        items_checklist=[
+            {"paso": "Revisa los códigos 401 y 403 repetidos"},
+            {"paso": "Busca errores 500 en el mismo endpoint"},
+            {"paso": "Inspecciona solicitudes a rutas administrativas"},
+            {"paso": "Confirma que las rutas sensibles exijan autenticación"},
+        ],
+    )
+
+    prompt = analizador_educativo.construir_system_prompt(TEMA_CHECKLIST)
+    assert "items_checklist: exactamente 4 a 6 objetos" in prompt
+    assert "sin sintaxis de comandos" in prompt
+    assert "items: null" in prompt
+
+    datos = analizar_tema_educativo(ClienteFalso([respuesta]), TEMA_CHECKLIST)
+
+    assert datos["meta"]["tipo"] == "checklist"
+    assert datos["items_checklist"] == [
+        {"paso": "Revisa los códigos 401 y 403 repetidos"},
+        {"paso": "Busca errores 500 en el mismo endpoint"},
+        {"paso": "Inspecciona solicitudes a rutas administrativas"},
+        {"paso": "Confirma que las rutas sensibles exijan autenticación"},
+    ]
+    assert "items" not in datos

@@ -29,11 +29,18 @@ PATRON_ESTADISTICA = re.compile(
 def construir_system_prompt(tema: dict) -> str:
     """Construye instrucciones específicas para el tema evergreen recibido."""
     tipo = tema.get("tipo", "")
-    es_formato_items = tipo in {"cheatsheet", "checklist"}
-    campos_items = """
+    if tipo == "cheatsheet":
+        campos_items = """
 - items: exactamente 3 a 4 objetos; cada uno debe tener sintaxis exacta y una explicacion de una sola línea (máximo 90 caracteres), sin párrafos.
 - riesgos y mitigacion: listas vacías; no los desarrolles para este formato.
-""" if es_formato_items else """
+"""
+    elif tipo == "checklist":
+        campos_items = """
+- items_checklist: exactamente 4 a 6 objetos; cada uno debe tener un campo paso con una acción breve de verificación (máximo 100 caracteres). Escribe pasos accionables en lenguaje natural, sin sintaxis de comandos, código ni prompts de terminal.
+- items: null; riesgos y mitigacion: listas vacías; no los desarrolles para este formato.
+"""
+    else:
+        campos_items = """
 - riesgos: exactamente 3 consecuencias o errores relevantes, de máximo {riesgo_limite} car. cada uno.
 - mitigacion: exactamente 3 acciones o pasos defensivos, de máximo {mitigacion_limite} car. cada uno.
 """.format(
@@ -48,7 +55,7 @@ TEMA:
 REGLAS:
 1. El contenido es atemporal y educativo; no lo trates como una noticia ni inventes una fuente.
 2. La slide 1 debe comenzar con un GANCHO fuerte que capte la atención durante los primeros 5-8 segundos de lectura.
-3. Si el tipo es "cheatsheet" o "checklist", usa formato accionable: comandos seguros o pasos numerados, sin relleno.
+3. Si el tipo es "cheatsheet", usa comandos seguros con sintaxis exacta. Si el tipo es "checklist", usa pasos de verificación en lenguaje natural, sin sintaxis de comandos.
 4. Evita cualquier cifra, estadística o afirmación específica que no sea conocimiento general aceptado en el campo. No inventes CVEs, porcentajes, casos "según estudios" ni datos concretos; si el tema requiere uno, omítelo.
 5. No incluyas CVEs en ningún campo. No incluyas exploits ni PoC funcionales.
 6. El caption debe terminar con una pregunta breve y directa relacionada con el tema; no incluyas hashtags ni fuente.
@@ -126,10 +133,10 @@ def analizar_tema_educativo(client, tema: dict, modelo: str = MODELO) -> dict:
             )
             datos["meta"]["familia"] = "educativo"
             datos["meta"]["tipo"] = tema["tipo"]
-            if tipo in {"cheatsheet", "checklist"}:
+            if tipo == "cheatsheet":
                 if not analisis.items or not 3 <= len(analisis.items) <= 4:
                     raise ValueError(
-                        "el formato cheatsheet/checklist requiere entre 3 y 4 items"
+                        "el formato cheatsheet requiere entre 3 y 4 items"
                     )
                 datos["items"] = [
                     {
@@ -137,6 +144,15 @@ def analizar_tema_educativo(client, tema: dict, modelo: str = MODELO) -> dict:
                         "explicacion": item.explicacion.strip(),
                     }
                     for item in analisis.items
+                ]
+            elif tipo == "checklist":
+                if not analisis.items_checklist or not 4 <= len(analisis.items_checklist) <= 6:
+                    raise ValueError(
+                        "el formato checklist requiere entre 4 y 6 pasos"
+                    )
+                datos["items_checklist"] = [
+                    {"paso": item.paso.strip()}
+                    for item in analisis.items_checklist
                 ]
             return datos
         except ValueError as e:
