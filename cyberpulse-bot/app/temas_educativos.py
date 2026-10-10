@@ -15,7 +15,6 @@ TEMAS_EDUCATIVOS = [
             "uno: qué hace exactamente y qué información obtienes. Enfatizar que esto es para "
             "auditorías autorizadas sobre infraestructura propia o con permiso explícito."
         ),
-        "usado": False,
     },
     {
         "id": "filtros-wireshark-esenciales",
@@ -27,7 +26,6 @@ TEMAS_EDUCATIVOS = [
             "flags TCP inusuales (tcp.flags). Cada filtro con la sintaxis exacta de Wireshark "
             "y qué patrón de ataque suele indicar."
         ),
-        "usado": False,
     },
     {
         "id": "codigos-http-que-indican-ataque",
@@ -40,7 +38,6 @@ TEMAS_EDUCATIVOS = [
             "que deberían requerir autenticación. Formato de checklist de lo que revisar en "
             "un log, no solo teoría."
         ),
-        "usado": False,
     },
     {
         "id": "zero-day-explicado",
@@ -53,7 +50,6 @@ TEMAS_EDUCATIVOS = [
             "son tan valiosos en el mercado negro. Sin inventar cifras de precios de mercado "
             "negro si no hay una fuente clara; mantenerlo conceptual."
         ),
-        "usado": True,
     },
     {
         "id": "cvss-en-60-segundos",
@@ -66,20 +62,5 @@ TEMAS_EDUCATIVOS = [
             "integridad, disponibilidad). El objetivo es que después de leer esto, alguien "
             "entienda por qué un 9.8 es grave y un 4.2 no lo es tanto."
         ),
-        "usado": False,
     },
 ]
-
-
-def siguiente_tema_pendiente():
-    """Devuelve el primer tema todavía no usado, o None si no quedan temas."""
-    return next((tema for tema in TEMAS_EDUCATIVOS if not tema["usado"]), None)
-
-
-def marcar_usado(identificador: str) -> None:
-    """Marca como usado el tema indicado; falla si el identificador no existe."""
-    for tema in TEMAS_EDUCATIVOS:
-        if tema["id"] == identificador:
-            tema["usado"] = True
-            return
-    raise ValueError(f"Tema educativo inexistente: {identificador}")
