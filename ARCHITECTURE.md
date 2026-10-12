@@ -39,7 +39,9 @@ RSS
 
 ## Estado actual
 
-El diseño está orientado a una única instancia. SQLite evita duplicados terminales, pero todavía no reserva trabajos de forma atómica para múltiples workers. Antes de escalar horizontalmente se requiere una máquina de estados con reclamación transaccional, reintentos limitados y reconciliación de publicaciones ambiguas.
+SQLite reserva cada noticia mediante una actualización atómica con una concesión temporal. Los fallos usan backoff exponencial y, al alcanzar el máximo configurado, el registro queda marcado para revisión manual. Consulta [la política de estados y reintentos](docs/publication-state-machine.md).
+
+La reserva reduce el riesgo de trabajo duplicado entre workers, pero la publicación en Meta todavía necesita reconciliación explícita para resultados ambiguos después de un timeout. Esa limitación debe resolverse antes de escalar horizontalmente.
 
 ## Principios operativos
 
