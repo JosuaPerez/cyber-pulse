@@ -58,6 +58,16 @@ Ambos servicios corren en contenedores Docker separados, conectados por una red 
 
 Proyecto activo y en desarrollo, mantenido por su autor como parte de su formación en ciberseguridad.
 
+## Desarrollo y seguridad
+
+- [Arquitectura y límites de confianza](ARCHITECTURE.md)
+- [Guía para contribuir](CONTRIBUTING.md)
+- [Política de seguridad](SECURITY.md)
+
+Antes de abrir un pull request, ejecuta las pruebas y controles descritos en
+`CONTRIBUTING.md`. Nunca adjuntes el archivo `.env`, tokens, bases de datos locales
+ni respuestas completas de APIs en commits, issues o logs públicos.
+
 ## Licencia
 
 MIT — ver [LICENSE](LICENSE).

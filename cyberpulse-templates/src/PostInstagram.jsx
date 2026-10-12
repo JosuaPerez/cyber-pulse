@@ -1,5 +1,3 @@
-import React from 'react';
-
 const PostInstagram = ({ familia = 'alerta', level, type, category, title, description, summary, currentSlide = 1, totalSlides = 5 }) => {
   const themeColors = {
     basic: { border: 'border-green-500', text: 'text-green-400', bg: 'bg-green-500/10', glow: 'shadow-[0_0_50px_rgba(34,197,94,0.15)]', bgGlow: 'bg-green-500', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /> },
@@ -29,7 +27,6 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
     ? educativoAccents[(currentSlide - 2) % educativoAccents.length]
     : educativoTheme;
   const theme = isEducativo ? { ...educativoTheme, ...accent } : (themeColors[level] || themeColors.critical);
-  const isTip = type === 'tip_content' || type === 'tip_bullets';
   const detailPromptClass = isEducativo ? accent.text : 'text-green-500';
   const educationalBodyClass = 'text-slate-200';
   const educationalSecondaryClass = isEducativo ? 'text-slate-200' : 'text-slate-300';

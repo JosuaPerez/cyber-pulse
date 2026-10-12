@@ -1,4 +1,3 @@
-import os
 from playwright.sync_api import sync_playwright
 
 def generar_banner_x():
