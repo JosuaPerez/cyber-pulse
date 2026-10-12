@@ -1,5 +1,6 @@
 import logging
 import time
+from enum import Enum
 
 import requests
 from google import genai
@@ -12,6 +13,7 @@ from app.historial_db import (
     inicializar_db,
     marcar_revision_manual,
     registrar_fallo,
+    registrar_publicacion_ambigua,
 )
 from app.lector_rss import obtener_noticia_nueva
 from app.generador import generar_imagenes_carrusel
@@ -23,6 +25,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+class ResultadoPublicacion(Enum):
+    PUBLICADA = "publicada"
+    FALLIDA = "fallida"
+    AMBIGUA = "ambigua"
+
 class CyberPulseBot:
     def __init__(self):
         config.validar_config_publicacion()
@@ -33,6 +41,10 @@ class CyberPulseBot:
         )
         self.gemini_client = genai.Client(api_key=config.GEMINI_API_KEY)
         self.session = requests.Session()
+        if self.access_token:
+            self.session.headers.update(
+                {"Authorization": f"Bearer {self.access_token}"}
+            )
         self.ultimo_meta_post_id = None
 
     def analizar_noticia_con_ia(self, noticia_rss):
@@ -72,8 +84,7 @@ class CyberPulseBot:
         url = f"{self.meta_base_url}/{self.ig_user_id}/media"
         payload = {
             'image_url': image_url, 
-            'is_carousel_item': 'true', 
-            'access_token': self.access_token
+            'is_carousel_item': 'true',
         }
         try:
             response = self.session.post(url, data=payload, timeout=config.HTTP_TIMEOUT)
@@ -111,7 +122,6 @@ class CyberPulseBot:
                     url,
                     params={
                         "fields": "status_code",
-                        "access_token": self.access_token,
                     },
                     timeout=config.HTTP_TIMEOUT,
                 )
@@ -162,18 +172,35 @@ class CyberPulseBot:
         # el id de una noticia anterior.
         self.ultimo_meta_post_id = None
 
+        if not clave_historial:
+            raise ValueError(
+                "clave_historial es obligatoria para publicar de forma reconciliable"
+            )
+
+        if len(rutas_imagenes) != 5:
+            logger.error(
+                "Se requieren exactamente 5 imagenes para publicar; se recibieron %d",
+                len(rutas_imagenes),
+            )
+            return ResultadoPublicacion.FALLIDA
+
         item_ids = []
-        for ruta in rutas_imagenes:
+        for indice, ruta in enumerate(rutas_imagenes):
             url_publica = subir_imagen_publica(ruta)
             if url_publica:
                 item_id = self.crear_item_carrusel(url_publica)
                 if item_id:
                     item_ids.append(item_id)
-            time.sleep(config.META_POLL_INTERVAL)
+            if indice < len(rutas_imagenes) - 1:
+                time.sleep(config.META_POLL_INTERVAL)
 
-        if len(item_ids) < 2:
-            logger.error("Meta requiere al menos 2 imagenes validas")
-            return False
+        if len(item_ids) != len(rutas_imagenes):
+            logger.error(
+                "No se publicara un carrusel incompleto: %d/%d items validos",
+                len(item_ids),
+                len(rutas_imagenes),
+            )
+            return ResultadoPublicacion.FALLIDA
 
         logger.info("Ensamblando estructura del carrusel en Meta")
         url_carousel = f"{self.meta_base_url}/{self.ig_user_id}/media"
@@ -181,7 +208,6 @@ class CyberPulseBot:
             'media_type': 'CAROUSEL',
             'children': ','.join(item_ids),
             'caption': caption,
-            'access_token': self.access_token
         }
         try:
             response_carousel = self.session.post(
@@ -191,20 +217,27 @@ class CyberPulseBot:
             )
         except requests.RequestException as exc:
             logger.error("Error de red al ensamblar el carrusel: %s", exc)
-            return False
+            return ResultadoPublicacion.FALLIDA
 
         res_carousel = self._respuesta_json(response_carousel, "ensamblar carrusel")
         if res_carousel is None:
-            return False
+            return ResultadoPublicacion.FALLIDA
         
         if 'id' not in res_carousel:
             logger.error("Error al ensamblar el carrusel en Meta: %s", res_carousel)
-            return False
+            return ResultadoPublicacion.FALLIDA
             
         creation_id = res_carousel['id']
         
         if not self.esperar_contenedor_finalizado(creation_id):
-            return False
+            return ResultadoPublicacion.FALLIDA
+
+        actualizar_estado(
+            clave_historial,
+            "renderizada",
+            meta_creation_id=creation_id,
+            meta_publicacion_pendiente=1,
+        )
         
         logger.info("Enviando orden de publicacion final a Meta")
         url_publish = f"{self.meta_base_url}/{self.ig_user_id}/media_publish"
@@ -213,21 +246,40 @@ class CyberPulseBot:
                 url_publish,
                 data={
                     'creation_id': creation_id,
-                    'access_token': self.access_token,
                 },
                 timeout=config.HTTP_TIMEOUT,
             )
         except requests.RequestException as exc:
-            logger.error("Error de red al publicar el carrusel: %s", exc)
-            return False
+            logger.critical(
+                "Resultado ambiguo al publicar el carrusel %s: %s",
+                creation_id,
+                exc,
+            )
+            registrar_publicacion_ambigua(
+                clave_historial,
+                creation_id,
+                f"Respuesta de media_publish no confirmada: {exc}",
+            )
+            return ResultadoPublicacion.AMBIGUA
 
         res_final = self._respuesta_json(response_final, "publicar carrusel")
         if res_final is None:
-            return False
+            registrar_publicacion_ambigua(
+                clave_historial,
+                creation_id,
+                "Meta devolvio una respuesta HTTP o JSON no verificable",
+            )
+            return ResultadoPublicacion.AMBIGUA
 
         if 'id' not in res_final:
             logger.error("Error en la publicacion final del carrusel: %s", res_final)
-            return False
+            actualizar_estado(
+                clave_historial,
+                "renderizada",
+                meta_publicacion_pendiente=0,
+                ultimo_error=f"Meta rechazo media_publish: {res_final}",
+            )
+            return ResultadoPublicacion.FALLIDA
 
         # === A partir de aquí, Meta YA confirmó el post. ===
         # Ninguna línea de aquí en adelante debe ser una llamada de red
@@ -237,25 +289,23 @@ class CyberPulseBot:
         self.ultimo_meta_post_id = res_final['id']
         logger.info("Carrusel publicado. ID de post: %s", res_final['id'])
 
-        if clave_historial:
-            try:
-                actualizar_estado(
-                    clave_historial,
-                    "publicada_meta",
-                    meta_post_id=res_final['id'],
-                )
-            except Exception:
-                # No relanzamos: el post YA está en Instagram. Si esta
-                # escritura falla, procesar_una_noticia tiene un intento de
-                # respaldo (ver FIX 1b más abajo) usando el mismo
-                # ultimo_meta_post_id.
-                logger.exception(
-                    "El post se publico en Meta (id=%s) pero no se pudo "
-                    "registrar de inmediato en SQLite; se reintentara.",
-                    res_final['id'],
-                )
+        try:
+            actualizar_estado(
+                clave_historial,
+                "publicada_meta",
+                meta_post_id=res_final['id'],
+            )
+        except Exception:
+            # No relanzamos: el post YA está en Instagram. Si esta escritura
+            # falla, procesar_una_noticia tiene un intento de respaldo usando
+            # el mismo ultimo_meta_post_id.
+            logger.exception(
+                "El post se publico en Meta (id=%s) pero no se pudo "
+                "registrar de inmediato en SQLite; se reintentara.",
+                res_final['id'],
+            )
 
-        return True
+        return ResultadoPublicacion.PUBLICADA
 
 def ejecutar_modo_centinela():
     inicializar_db()
@@ -337,8 +387,17 @@ def procesar_una_noticia(bot):
         # FIX 1: se pasa clave_historial para que el estado quede escrito
         # inmediatamente dentro de publicar_carrusel_local, apenas Meta
         # confirme el post.
-        exito = bot.publicar_carrusel_local(rutas_carrusel, caption, clave_historial=clave)
-        if not exito:
+        resultado = bot.publicar_carrusel_local(
+            rutas_carrusel,
+            caption,
+            clave_historial=clave,
+        )
+        if resultado is ResultadoPublicacion.AMBIGUA:
+            logger.critical(
+                "La publicacion tiene resultado ambiguo y requiere verificacion manual"
+            )
+            return
+        if resultado is not ResultadoPublicacion.PUBLICADA:
             registrar_fallo(clave, "La publicacion en Meta fallo")
             logger.error("La publicacion en Meta fallo")
             return
