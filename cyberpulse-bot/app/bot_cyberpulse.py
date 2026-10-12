@@ -7,7 +7,12 @@ from google import genai
 from app import config
 from app.almacenamiento_r2 import subir_imagen_publica
 from app.analizador import ErrorAnalisis, NoticiaDescartada, analizar_noticia
-from app.historial_db import actualizar_estado, inicializar_db
+from app.historial_db import (
+    actualizar_estado,
+    inicializar_db,
+    marcar_revision_manual,
+    registrar_fallo,
+)
 from app.lector_rss import obtener_noticia_nueva
 from app.generador import generar_imagenes_carrusel
 from app.publicador_x import publicar_hilo_x
@@ -45,7 +50,13 @@ class CyberPulseBot:
             logger.info("Noticia descartada: %s", exc)
             return None
         except ErrorAnalisis as exc:
+            clave = noticia_rss.get("clave_historial", noticia_rss["title"])
+            requiere_revision = registrar_fallo(clave, str(exc))
             logger.error("No se pudo analizar la noticia: %s", exc)
+            if requiere_revision:
+                logger.error(
+                    "La noticia alcanzo el maximo de intentos y requiere revision manual"
+                )
             return None
 
     def _respuesta_json(self, response, operacion):
@@ -270,6 +281,10 @@ def ejecutar_modo_centinela():
 def procesar_una_noticia(bot):
     """Procesa como maximo una noticia y deja el estado en el historial si publica."""
     noticia = None
+    # Nunca se debe heredar el ID confirmado de una noticia anterior. Si la
+    # siguiente falla antes de llegar a Meta, conservarlo marcaría la noticia
+    # equivocada como publicada.
+    bot.ultimo_meta_post_id = None
     try:
         noticia = obtener_noticia_nueva()
         if not noticia:
@@ -316,6 +331,7 @@ def procesar_una_noticia(bot):
                     f"CVEs: {', '.join(meta.get('cves', []))}\n"
                 )
             logger.info("Post pendiente guardado en: %s", archivo_pendiente)
+            marcar_revision_manual(clave)
             return
 
         # FIX 1: se pasa clave_historial para que el estado quede escrito
@@ -323,12 +339,7 @@ def procesar_una_noticia(bot):
         # confirme el post.
         exito = bot.publicar_carrusel_local(rutas_carrusel, caption, clave_historial=clave)
         if not exito:
-            actualizar_estado(
-                clave,
-                "fallida",
-                ultimo_error="La publicacion en Meta fallo",
-                incrementar_intentos=True,
-            )
+            registrar_fallo(clave, "La publicacion en Meta fallo")
             logger.error("La publicacion en Meta fallo")
             return
 
@@ -395,12 +406,7 @@ def procesar_una_noticia(bot):
                 except Exception:
                     logger.exception("No se pudo persistir publicada_meta tras el error")
             else:
-                actualizar_estado(
-                    noticia["clave_historial"],
-                    "fallida",
-                    ultimo_error=str(exc),
-                    incrementar_intentos=True,
-                )
+                registrar_fallo(noticia["clave_historial"], str(exc))
         raise
 
 if __name__ == "__main__":

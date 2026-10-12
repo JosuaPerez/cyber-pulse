@@ -4,7 +4,7 @@ import logging
 import requests
 
 from app import config
-from app.historial_db import registrar_deteccion, ya_procesada
+from app.historial_db import registrar_deteccion, reservar_publicacion, ya_procesada
 
 # Agregamos los sitios web más relevantes del sector
 FUENTES_RSS = [
@@ -46,12 +46,17 @@ def obtener_noticia_nueva():
             clave_historial = str(
                 entrada.get("id") or entrada.get("link") or titulo
             ).strip()
+
+            if not titulo or not clave_historial:
+                logging.warning("Entrada RSS sin titulo o identificador en %s", url)
+                continue
             
             clave_legacy_migrada = titulo if titulo != clave_historial else None
-            if not ya_procesada(clave_historial) and (
-                not clave_legacy_migrada or not ya_procesada(clave_legacy_migrada)
-            ):
-                registrar_deteccion(clave_historial, titulo)
+            if clave_legacy_migrada and ya_procesada(clave_legacy_migrada):
+                continue
+
+            registrar_deteccion(clave_historial, titulo)
+            if reservar_publicacion(clave_historial):
                 logging.info("Noticia inédita encontrada: %s", titulo)
                 return {
                     "title": titulo,
