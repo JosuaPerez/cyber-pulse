@@ -4,10 +4,7 @@ from app import lector_rss
 
 
 class RespuestaFalsa:
-    content = b"feed"
-
-    def raise_for_status(self):
-        return None
+    contenido = b"feed"
 
 
 def test_selector_salta_noticia_no_elegible_y_continua(monkeypatch):
@@ -29,8 +26,8 @@ def test_selector_salta_noticia_no_elegible_y_continua(monkeypatch):
 
     monkeypatch.setattr(lector_rss, "FUENTES_RSS", ["https://feed.example.test"])
     monkeypatch.setattr(
-        lector_rss.requests,
-        "get",
+        lector_rss,
+        "descargar_bytes",
         lambda *args, **kwargs: RespuestaFalsa(),
     )
     monkeypatch.setattr(
@@ -62,8 +59,8 @@ def test_selector_salta_noticia_no_elegible_y_continua(monkeypatch):
 def test_selector_ignora_entradas_sin_identidad(monkeypatch):
     monkeypatch.setattr(lector_rss, "FUENTES_RSS", ["https://feed.example.test"])
     monkeypatch.setattr(
-        lector_rss.requests,
-        "get",
+        lector_rss,
+        "descargar_bytes",
         lambda *args, **kwargs: RespuestaFalsa(),
     )
     monkeypatch.setattr(

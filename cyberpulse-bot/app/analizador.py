@@ -11,12 +11,13 @@ import re
 import time
 from urllib.parse import urlparse
 
-import requests
 from google.genai import types
 from pydantic import ValidationError
 
+from app import config as app_config
 from app.esquemas import LIMITES, PATRON_CVE, AnalisisIA, a_formato_legacy
 from app.glosario import glosario_para_prompt
+from app.http_seguro import descargar_bytes
 
 log = logging.getLogger("cyberpulse.analizador")
 
@@ -24,7 +25,6 @@ MODELO = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
 MAX_INTENTOS = 3
 ESPERA_BASE_API = 10          # segundos; se duplica en cada fallo de red/API
 MAX_CHARS_FUENTE = 6000
-TIMEOUT_DESCARGA = 15
 MARGEN_PROMPT = 0.85
 
 NOMBRES_FUENTE = {
@@ -56,9 +56,14 @@ def obtener_texto_fuente(noticia: dict) -> str:
         try:
             import trafilatura  # opcional: pip install trafilatura
 
-            resp = requests.get(link, timeout=TIMEOUT_DESCARGA, headers={"User-Agent": "Mozilla/5.0 CyberPulse"})
-            resp.raise_for_status()
-            texto = trafilatura.extract(resp.text) or ""
+            resp = descargar_bytes(
+                link,
+                timeout=app_config.HTTP_TIMEOUT,
+                headers={"User-Agent": "Mozilla/5.0 CyberPulse"},
+                max_bytes=app_config.ARTICULO_MAX_BYTES,
+                max_redirecciones=app_config.HTTP_MAX_REDIRECCIONES,
+            )
+            texto = trafilatura.extract(resp.texto) or ""
         except Exception as e:  # red, bloqueo anti-bot, trafilatura no instalado...
             log.warning("No se pudo descargar el artículo completo (%s); uso el resumen del RSS", e)
     if len(texto) >= 300:

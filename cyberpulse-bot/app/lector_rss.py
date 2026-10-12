@@ -1,10 +1,9 @@
 import feedparser
 import logging
 
-import requests
-
 from app import config
 from app.historial_db import registrar_deteccion, reservar_publicacion, ya_procesada
+from app.http_seguro import DescargaFallida, DescargaRechazada, descargar_bytes
 
 # Agregamos los sitios web más relevantes del sector
 FUENTES_RSS = [
@@ -14,6 +13,10 @@ FUENTES_RSS = [
     "https://www.darkreading.com/rss.xml",
     "https://www.securityweek.com/feed/"
 ]
+HEADERS_RSS = {
+    "User-Agent": "Mozilla/5.0 (compatible; CyberPulseBot/1.0)",
+    "Accept": "application/rss+xml, application/xml;q=0.9, */*;q=0.1",
+}
 
 def obtener_noticia_nueva():
     """Escanea todos los sitios y devuelve la primera noticia que no esté en el historial."""
@@ -21,14 +24,15 @@ def obtener_noticia_nueva():
         logging.info("Escaneando fuente RSS: %s", url)
 
         try:
-            respuesta = requests.get(
+            respuesta = descargar_bytes(
                 url,
                 timeout=config.HTTP_TIMEOUT,
-                headers={"User-Agent": "CyberPulseBot/1.0"},
+                headers=HEADERS_RSS,
+                max_bytes=config.RSS_MAX_BYTES,
+                max_redirecciones=config.HTTP_MAX_REDIRECCIONES,
             )
-            respuesta.raise_for_status()
-            feed = feedparser.parse(respuesta.content)
-        except requests.RequestException as exc:
+            feed = feedparser.parse(respuesta.contenido)
+        except (DescargaFallida, DescargaRechazada) as exc:
             logging.warning("No se pudo descargar el feed %s: %s", url, exc)
             continue
         
