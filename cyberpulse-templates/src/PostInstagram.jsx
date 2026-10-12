@@ -31,8 +31,10 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
   const theme = isEducativo ? { ...educativoTheme, ...accent } : (themeColors[level] || themeColors.critical);
   const isTip = type === 'tip_content' || type === 'tip_bullets';
   const detailPromptClass = isEducativo ? accent.text : 'text-green-500';
+  const educationalBodyClass = 'text-slate-200';
+  const educationalSecondaryClass = isEducativo ? 'text-slate-200' : 'text-slate-300';
   const impactCardClass = isEducativo
-    ? 'bg-slate-900/30 border-transparent hover:bg-slate-900/50'
+    ? 'border-transparent'
     : 'bg-red-950/20 border-red-900/40 hover:bg-red-950/40';
   const impactIconClass = isEducativo ? accent.text : 'text-red-500';
   const saveTextClass = isEducativo ? 'text-cyan-400' : 'text-yellow-400';
@@ -101,7 +103,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
         {type !== 'cover' && (
           <>
             {isEducativo && (
-              <div className={`absolute right-0 top-0 text-[20rem] leading-none font-brand font-bold ${theme.text} opacity-10 pointer-events-none select-none`}>
+              <div className={`absolute right-0 top-0 ${type === 'command_pair' ? 'text-[14rem] opacity-[0.06]' : 'text-[18rem] opacity-[0.08]'} leading-none font-brand font-bold ${theme.text} pointer-events-none select-none`}>
                 {currentSlide}
               </div>
             )}
@@ -126,7 +128,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
                   <h2 className="text-[5.5rem] font-brand font-bold text-white leading-tight">
                     {renderHighlighted(title)}
                   </h2>
-                  <p className="text-4xl text-slate-300 leading-snug mt-8 font-light max-w-[900px]">
+                  <p className={`text-4xl ${educationalBodyClass} leading-snug mt-8 font-light max-w-[900px]`}>
                     {renderHighlighted(description)}
                   </p>
                 </div>
@@ -174,7 +176,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           {/* 2. EL PROBLEMA (TL;DR) */}
           {type === 'problem' && (
             <div className={isEducativo ? 'p-0' : 'bg-slate-900/80 p-12 rounded-3xl border border-slate-700 backdrop-blur-md shadow-2xl'}>
-              <p className={`text-4xl text-slate-200 leading-relaxed font-medium ${isEducativo ? 'border-l-4 border-current pl-8' : ''}`}>
+              <p className={`text-4xl ${educationalBodyClass} leading-relaxed font-medium ${isEducativo ? 'border-l-4 border-current pl-8' : ''}`}>
                 {renderHighlighted(description)}
               </p>
             </div>
@@ -184,7 +186,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           {type === 'detail' && (
             <div className={isEducativo ? 'py-4' : 'bg-[#0D1117] p-12 rounded-2xl border border-slate-700 shadow-2xl flex-grow flex flex-col min-h-[500px]'}>
               {isEducativo ? (
-                <p className="text-4xl text-slate-200 leading-relaxed font-medium border-l-4 pl-8" style={{ borderColor: 'currentColor' }}>
+                <p className={`text-4xl ${educationalBodyClass} leading-relaxed font-medium border-l-4 pl-8`} style={{ borderColor: 'currentColor' }}>
                   {renderHighlighted(description)}
                 </p>
               ) : (
@@ -210,7 +212,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
                   {isEducativo ? (
                     <>
                       <p className={`text-[2rem] ${accent.text} leading-relaxed font-mono font-bold`}>{item.sintaxis}</p>
-                      <p className="text-2xl text-slate-300 leading-snug mt-3">{item.explicacion}</p>
+                      <p className={`text-3xl ${educationalBodyClass} leading-snug mt-3`}>{item.explicacion}</p>
                     </>
                   ) : (
                     <>
@@ -236,13 +238,13 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           {type === 'checklist_steps' && (
             <div className="flex flex-col gap-6">
               {summary.map((item, index) => (
-                <div key={index} className={isEducativo ? 'flex items-center gap-6 p-5 bg-slate-900/30 border-l-4 border-transparent' : `flex items-center gap-6 p-8 rounded-2xl border ${theme.border} ${theme.bg} shadow-2xl`}>
+                <div key={index} className={isEducativo ? 'flex items-center gap-6 py-4' : `flex items-center gap-6 p-8 rounded-2xl border ${theme.border} ${theme.bg} shadow-2xl`}>
                   <div className={`flex-shrink-0 w-14 h-14 ${isEducativo ? `border-2 ${accent.border}` : `rounded-xl border-2 ${theme.border}`} flex items-center justify-center`}>
                     <svg className={`w-9 h-9 ${theme.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <p className="text-4xl text-slate-200 leading-snug font-medium">
+                  <p className={`text-4xl ${educationalBodyClass} leading-snug font-medium`}>
                     {item.paso}
                   </p>
                 </div>
@@ -252,12 +254,13 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
 
           {type === 'tip_content' && (
             <div className="flex flex-col gap-8">
-              <p className="text-4xl text-slate-200 leading-snug font-medium">
+              <p className={`text-4xl ${educationalBodyClass} leading-snug font-medium`}>
                 {summary.texto}
               </p>
               <div className="flex flex-wrap gap-4">
                 {summary.chips.map((chip, index) => (
-                  <span key={index} className={`rounded-full border-2 ${index === 0 ? `${accent.border} ${accent.text}` : 'border-slate-700 text-slate-400'} px-5 py-2 text-2xl font-bold tracking-wide`}>
+                  <span key={index} className={`flex items-center gap-3 px-1 py-2 text-2xl font-bold tracking-wide ${index === 0 ? accent.text : 'text-slate-200'}`}>
+                    <span className={`w-3 h-3 ${index === 0 ? accent.solid : 'bg-slate-500'}`}></span>
                     {chip.texto}
                   </span>
                 ))}
@@ -266,7 +269,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
                 {summary.stats.map((stat, index) => (
                   <div key={index} className={`p-4 text-center ${index > 0 ? 'border-l border-slate-700' : ''}`}>
                     <p className={`text-6xl font-extrabold ${accent.text}`}>{stat.valor}</p>
-                    <p className="text-2xl text-slate-300 leading-snug mt-3">{stat.etiqueta}</p>
+                    <p className={`${isEducativo ? 'text-3xl' : 'text-2xl'} ${educationalBodyClass} leading-snug mt-3`}>{stat.etiqueta}</p>
                   </div>
                 ))}
               </div>
@@ -276,9 +279,9 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           {type === 'tip_bullets' && (
             <div className="flex flex-col gap-6">
               {summary.map((bullet, index) => (
-                <div key={index} className="flex items-center gap-6 bg-slate-900/30 p-5 border-l-4 border-transparent">
+                <div key={index} className="flex items-center gap-6 py-4">
                   <div className={`flex-shrink-0 w-12 h-12 ${['bg-cyan-500', 'bg-sky-500', 'bg-teal-500', 'bg-violet-500'][index]}`}></div>
-                  <p className="text-4xl text-slate-200 leading-snug font-medium">{bullet}</p>
+                  <p className={`text-4xl ${educationalBodyClass} leading-snug font-medium`}>{bullet}</p>
                 </div>
               ))}
             </div>
@@ -286,7 +289,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
 
           {type === 'pro_tip' && (
             <div className={isEducativo ? 'py-4 border-l-4 pl-8' : `p-12 rounded-3xl border ${theme.border} ${theme.bg} shadow-2xl`}>
-              <p className="text-4xl text-slate-200 leading-relaxed font-medium">
+              <p className={`text-4xl ${educationalBodyClass} leading-relaxed font-medium`}>
                 {renderHighlighted(description)}
               </p>
             </div>
@@ -299,7 +302,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
                   <span className={`font-mono text-2xl font-bold ${theme.text}`}>{index + 1}</span>
                   <div>
                     <p className={`font-mono text-2xl font-bold ${theme.text}`}>{item.sintaxis}</p>
-                    <p className="text-2xl text-slate-300 leading-snug mt-2">{item.explicacion}</p>
+                    <p className={`${isEducativo ? 'text-3xl' : 'text-2xl'} ${educationalSecondaryClass} leading-snug mt-2`}>{item.explicacion}</p>
                   </div>
                 </div>
               ))}
@@ -309,14 +312,14 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           {/* 4. EL IMPACTO */}
           {type === 'impact' && (
             <>
-              <p className="text-4xl text-slate-300 leading-snug mb-10">{renderHighlighted(description)}</p>
+              <p className={`text-4xl ${educationalSecondaryClass} leading-snug mb-10`}>{renderHighlighted(description)}</p>
               <div className="grid grid-cols-1 gap-8">
                 {summary.map((risk, index) => (
-                  <div key={index} className={isEducativo ? `flex items-center gap-8 p-5 border-l-4 border-transparent transition-colors ${impactCardClass}` : `flex items-center gap-8 p-8 rounded-2xl border shadow-lg transition-colors ${impactCardClass}`}>
+                  <div key={index} className={isEducativo ? `flex items-center gap-8 py-4 transition-colors ${impactCardClass}` : `flex items-center gap-8 p-8 rounded-2xl border shadow-lg transition-colors ${impactCardClass}`}>
                     <div className={`${impactIconClass} flex-shrink-0`}>
                       <svg className="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                     </div>
-                    <p className="text-4xl text-slate-200 leading-snug">{renderHighlighted(risk)}</p>
+                    <p className={`text-4xl ${educationalBodyClass} leading-snug`}>{renderHighlighted(risk)}</p>
                   </div>
                 ))}
               </div>
@@ -326,14 +329,14 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           {/* 5. MITIGACIÓN */}
           {type === 'mitigation' && (
             <>
-              <p className="text-4xl text-slate-300 leading-snug mb-10">{renderHighlighted(description)}</p>
+              <p className={`text-4xl ${educationalSecondaryClass} leading-snug mb-10`}>{renderHighlighted(description)}</p>
               <div className="flex flex-col gap-8">
                 {summary.map((step, index) => (
-                  <div key={index} className={isEducativo ? 'flex items-center gap-8 p-5 bg-slate-900/30 border-l-4 border-transparent' : 'flex items-center gap-8 bg-slate-900/80 p-8 rounded-2xl border-l-8 shadow-lg'} style={isEducativo ? undefined : { borderLeftColor: theme.border.replace('border-', '') }}>
+                  <div key={index} className={isEducativo ? 'flex items-center gap-8 py-4' : 'flex items-center gap-8 bg-slate-900/80 p-8 rounded-2xl border-l-8 shadow-lg'} style={isEducativo ? undefined : { borderLeftColor: theme.border.replace('border-', '') }}>
                     <div className={`flex-shrink-0 w-14 h-14 ${isEducativo ? `border-2 ${accent.border}` : `rounded-full ${theme.bg} border-2 ${theme.border}`} flex items-center justify-center`}>
                       <svg className={`w-8 h-8 ${theme.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
                     </div>
-                    <p className="text-4xl text-slate-200 font-medium leading-snug">{renderHighlighted(step)}</p>
+                    <p className={`text-4xl ${educationalBodyClass} font-medium leading-snug`}>{renderHighlighted(step)}</p>
                   </div>
                 ))}
               </div>
