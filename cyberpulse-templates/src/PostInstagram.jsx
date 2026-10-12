@@ -19,14 +19,33 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
     bgGlow: 'bg-cyan-500',
     icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM4 5.5A2.5 2.5 0 016.5 8H20M8 12h8m-8 4h5" />,
   };
-  const theme = isEducativo ? educativoTheme : (themeColors[level] || themeColors.critical);
+  const educativoAccents = [
+    { border: 'border-cyan-500', text: 'text-cyan-400', bg: 'bg-cyan-500/10', bgGlow: 'bg-cyan-500', solid: 'bg-cyan-500' },
+    { border: 'border-sky-500', text: 'text-sky-400', bg: 'bg-sky-500/10', bgGlow: 'bg-sky-500', solid: 'bg-sky-500' },
+    { border: 'border-teal-500', text: 'text-teal-400', bg: 'bg-teal-500/10', bgGlow: 'bg-teal-500', solid: 'bg-teal-500' },
+    { border: 'border-violet-500', text: 'text-violet-400', bg: 'bg-violet-500/10', bgGlow: 'bg-violet-500', solid: 'bg-violet-500' },
+  ];
+  const accent = isEducativo && type !== 'cover'
+    ? educativoAccents[(currentSlide - 2) % educativoAccents.length]
+    : educativoTheme;
+  const theme = isEducativo ? { ...educativoTheme, ...accent } : (themeColors[level] || themeColors.critical);
   const isTip = type === 'tip_content' || type === 'tip_bullets';
-  const detailPromptClass = isEducativo ? 'text-cyan-400' : 'text-green-500';
+  const detailPromptClass = isEducativo ? accent.text : 'text-green-500';
   const impactCardClass = isEducativo
-    ? 'bg-cyan-950/20 border-cyan-900/40 hover:bg-cyan-950/40'
+    ? 'bg-slate-900/30 border-transparent hover:bg-slate-900/50'
     : 'bg-red-950/20 border-red-900/40 hover:bg-red-950/40';
-  const impactIconClass = isEducativo ? 'text-cyan-400' : 'text-red-500';
+  const impactIconClass = isEducativo ? accent.text : 'text-red-500';
   const saveTextClass = isEducativo ? 'text-cyan-400' : 'text-yellow-400';
+  const isLastEducationalSlide = isEducativo && currentSlide === totalSlides;
+  const closingMantras = {
+    cheatsheet: 'Aprende la herramienta. Entiende la señal. Actúa mejor.',
+    checklist_steps: 'Lo que revisas hoy, te protege mañana.',
+    tip_bullets: 'Pausa. Verifica. Decide con criterio.',
+    impact: 'Entender el riesgo es el primer paso para reducirlo.',
+    mitigation: 'La defensa empieza con una decisión consciente.',
+    recap: 'Quédate con la señal. Aplícala cuando importe.',
+  };
+  const closingMantra = closingMantras[type] || 'Aprende hoy. Protege mejor mañana.';
   const progressWidth = `${(currentSlide / totalSlides) * 100}%`;
 
   const renderHighlighted = (text) => {
@@ -42,7 +61,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
   };
 
   return (
-    <div className={`w-[1080px] h-[1350px] bg-[#070B14] flex flex-col justify-between p-16 font-sans relative overflow-hidden ${theme.glow}`}>
+    <div className={`${isEducativo ? 'w-[1080px] h-[1350px] bg-[#050505]' : `w-[1080px] h-[1350px] bg-[#070B14] ${theme.glow}`} flex flex-col justify-between p-16 font-sans relative overflow-hidden`}>
 
       {/* BARRA DE PROGRESO */}
       <div className="absolute top-0 left-0 w-full h-3 bg-slate-900 z-50">
@@ -50,9 +69,11 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
       </div>
 
       {/* FONDO DE MALLA SUTIL */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none"
-        style={{ backgroundImage: 'linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
-      </div>
+      {!isEducativo && (
+        <div className="absolute inset-0 opacity-10 pointer-events-none"
+          style={{ backgroundImage: 'linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
+        </div>
+      )}
 
       {/* CABECERA */}
       <div className="flex justify-between items-center z-10 mt-6">
@@ -64,7 +85,9 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           </div>
           <h1 className="text-4xl font-bold text-white tracking-widest">Cyber<span className={theme.text}>Pulse</span></h1>
         </div>
-        <div className={`px-6 py-2 rounded-full border-2 ${theme.border} ${theme.bg} ${theme.text} uppercase tracking-widest font-bold text-xl`}>
+        <div className={isEducativo
+          ? `text-sm ${theme.text} uppercase tracking-[0.3em] font-bold`
+          : `px-6 py-2 rounded-full border-2 ${theme.border} ${theme.bg} ${theme.text} uppercase tracking-widest font-bold text-xl`}>
           {category}
         </div>
       </div>
@@ -76,7 +99,14 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
 
         {/* EL "HILO" CONDUCTOR: Una línea vertical que conecta la historia (excepto en la portada) */}
         {type !== 'cover' && (
-          <div className={`absolute left-0 top-10 bottom-10 w-1 ${theme.bgGlow} opacity-30 rounded-full`}></div>
+          <>
+            {isEducativo && (
+              <div className={`absolute right-0 top-0 text-[20rem] leading-none font-brand font-bold ${theme.text} opacity-10 pointer-events-none select-none`}>
+                {currentSlide}
+              </div>
+            )}
+            <div className={`absolute left-0 top-10 bottom-10 w-1 ${theme.bgGlow} opacity-30 rounded-full`}></div>
+          </>
         )}
 
         <div className={type !== 'cover' ? "pl-12" : ""}>
@@ -84,6 +114,24 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           {/* 1. PORTADA MEJORADA (Con Fotografía de Fondo Integrada) */}
           {type === 'cover' && (
             <>
+              {isEducativo ? (
+                <div className="flex flex-col items-start text-left w-full relative z-10 pt-20">
+                  <div className={`flex items-center gap-4 mb-10 ${theme.text}`}>
+                    <svg className="w-12 h-12" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 12h4l2-7 4 14 2-7h4" />
+                    </svg>
+                    <span className="text-xl uppercase tracking-[0.35em] font-bold">Idea práctica</span>
+                  </div>
+                  <div className={`w-24 h-1 ${theme.bgGlow} mb-8`}></div>
+                  <h2 className="text-[5.5rem] font-brand font-bold text-white leading-tight">
+                    {renderHighlighted(title)}
+                  </h2>
+                  <p className="text-4xl text-slate-300 leading-snug mt-8 font-light max-w-[900px]">
+                    {renderHighlighted(description)}
+                  </p>
+                </div>
+              ) : (
+                <>
               {/* NUEVA IMAGEN DE FONDO (Con opacidad baja y mezcla) */}
               <div className="absolute inset-0 z-0 opacity-20 mix-blend-luminosity">
                 <img
@@ -111,20 +159,22 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
                   {renderHighlighted(description)}
                 </p>
               </div>
+                </>
+              )}
             </>
           )}
 
           {/* TITULO ESTÁNDAR PARA SLIDES 2 AL 5 */}
           {type !== 'cover' && (
-            <h2 className="text-[4.5rem] font-extrabold text-white leading-tight mb-10">
+            <h2 className={isEducativo ? 'text-[4.5rem] font-brand font-bold text-white leading-tight mb-10 text-left' : 'text-[4.5rem] font-extrabold text-white leading-tight mb-10'}>
               {renderHighlighted(title)}
             </h2>
           )}
 
           {/* 2. EL PROBLEMA (TL;DR) */}
           {type === 'problem' && (
-            <div className="bg-slate-900/80 p-12 rounded-3xl border border-slate-700 backdrop-blur-md shadow-2xl">
-              <p className="text-4xl text-slate-200 leading-relaxed font-medium">
+            <div className={isEducativo ? 'p-0' : 'bg-slate-900/80 p-12 rounded-3xl border border-slate-700 backdrop-blur-md shadow-2xl'}>
+              <p className={`text-4xl text-slate-200 leading-relaxed font-medium ${isEducativo ? 'border-l-4 border-current pl-8' : ''}`}>
                 {renderHighlighted(description)}
               </p>
             </div>
@@ -132,7 +182,13 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
 
           {/* 3. DETALLE TÉCNICO (Terminal más imponente) */}
           {type === 'detail' && (
-            <div className="bg-[#0D1117] p-12 rounded-2xl border border-slate-700 shadow-2xl flex-grow flex flex-col min-h-[500px]">
+            <div className={isEducativo ? 'py-4' : 'bg-[#0D1117] p-12 rounded-2xl border border-slate-700 shadow-2xl flex-grow flex flex-col min-h-[500px]'}>
+              {isEducativo ? (
+                <p className="text-4xl text-slate-200 leading-relaxed font-medium border-l-4 pl-8" style={{ borderColor: 'currentColor' }}>
+                  {renderHighlighted(description)}
+                </p>
+              ) : (
+                <>
               <div className="flex gap-3 mb-10 border-b border-slate-800 pb-6">
                 <div className="w-6 h-6 rounded-full bg-red-500"></div>
                 <div className="w-6 h-6 rounded-full bg-yellow-500"></div>
@@ -142,13 +198,22 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
                 <span className={`${detailPromptClass} font-bold`}>root@cyberpulse:~#</span> ./analyze<br /><br />
                 <span className="text-slate-400"> </span>{renderHighlighted(description)}
               </p>
+                </>
+              )}
             </div>
           )}
 
           {type === 'command_pair' && (
             <div className="flex flex-col gap-6">
               {summary.map((item, index) => (
-                <div key={index} className="bg-[#0D1117] p-8 rounded-2xl border border-slate-700 shadow-2xl">
+                <div key={index} className={isEducativo ? 'border-l-4 pl-6 py-4' : 'bg-[#0D1117] p-8 rounded-2xl border border-slate-700 shadow-2xl'}>
+                  {isEducativo ? (
+                    <>
+                      <p className={`text-[2rem] ${accent.text} leading-relaxed font-mono font-bold`}>{item.sintaxis}</p>
+                      <p className="text-2xl text-slate-300 leading-snug mt-3">{item.explicacion}</p>
+                    </>
+                  ) : (
+                    <>
                   <div className="flex gap-3 mb-5 border-b border-slate-800 pb-4">
                     <div className="w-5 h-5 rounded-full bg-red-500"></div>
                     <div className="w-5 h-5 rounded-full bg-yellow-500"></div>
@@ -161,6 +226,8 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
                   <p className="text-2xl text-slate-300 leading-snug mt-4">
                     {item.explicacion}
                   </p>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -169,8 +236,8 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           {type === 'checklist_steps' && (
             <div className="flex flex-col gap-6">
               {summary.map((item, index) => (
-                <div key={index} className={`flex items-center gap-6 p-8 rounded-2xl border ${theme.border} ${theme.bg} shadow-2xl`}>
-                  <div className={`flex-shrink-0 w-16 h-16 rounded-xl border-2 ${theme.border} flex items-center justify-center`}>
+                <div key={index} className={isEducativo ? 'flex items-center gap-6 p-5 bg-slate-900/30 border-l-4 border-transparent' : `flex items-center gap-6 p-8 rounded-2xl border ${theme.border} ${theme.bg} shadow-2xl`}>
+                  <div className={`flex-shrink-0 w-14 h-14 ${isEducativo ? `border-2 ${accent.border}` : `rounded-xl border-2 ${theme.border}`} flex items-center justify-center`}>
                     <svg className={`w-9 h-9 ${theme.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                     </svg>
@@ -190,15 +257,15 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
               </p>
               <div className="flex flex-wrap gap-4">
                 {summary.chips.map((chip, index) => (
-                  <span key={index} className={`rounded-full border-2 ${theme.border} ${theme.bg} ${theme.text} px-5 py-2 text-2xl font-bold tracking-wide`}>
+                  <span key={index} className={`rounded-full border-2 ${index === 0 ? `${accent.border} ${accent.text}` : 'border-slate-700 text-slate-400'} px-5 py-2 text-2xl font-bold tracking-wide`}>
                     {chip.texto}
                   </span>
                 ))}
               </div>
               <div className="grid grid-cols-2 gap-6">
                 {summary.stats.map((stat, index) => (
-                  <div key={index} className={`rounded-2xl border ${theme.border} ${theme.bg} p-8 text-center shadow-2xl`}>
-                    <p className={`text-6xl font-extrabold ${theme.text}`}>{stat.valor}</p>
+                  <div key={index} className={`p-4 text-center ${index > 0 ? 'border-l border-slate-700' : ''}`}>
+                    <p className={`text-6xl font-extrabold ${accent.text}`}>{stat.valor}</p>
                     <p className="text-2xl text-slate-300 leading-snug mt-3">{stat.etiqueta}</p>
                   </div>
                 ))}
@@ -209,8 +276,8 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           {type === 'tip_bullets' && (
             <div className="flex flex-col gap-6">
               {summary.map((bullet, index) => (
-                <div key={index} className="flex items-center gap-6 bg-slate-900/80 p-8 rounded-2xl border border-cyan-900/40 shadow-2xl">
-                  <div className={`flex-shrink-0 w-12 h-12 rounded-lg ${['bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-cyan-700'][index]}`}></div>
+                <div key={index} className="flex items-center gap-6 bg-slate-900/30 p-5 border-l-4 border-transparent">
+                  <div className={`flex-shrink-0 w-12 h-12 ${['bg-cyan-500', 'bg-sky-500', 'bg-teal-500', 'bg-violet-500'][index]}`}></div>
                   <p className="text-4xl text-slate-200 leading-snug font-medium">{bullet}</p>
                 </div>
               ))}
@@ -218,7 +285,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           )}
 
           {type === 'pro_tip' && (
-            <div className={`p-12 rounded-3xl border ${theme.border} ${theme.bg} shadow-2xl`}>
+            <div className={isEducativo ? 'py-4 border-l-4 pl-8' : `p-12 rounded-3xl border ${theme.border} ${theme.bg} shadow-2xl`}>
               <p className="text-4xl text-slate-200 leading-relaxed font-medium">
                 {renderHighlighted(description)}
               </p>
@@ -228,7 +295,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           {type === 'recap' && (
             <div className="flex flex-col gap-5">
               {summary.map((item, index) => (
-                <div key={index} className="flex items-start gap-5 bg-slate-900/80 p-6 rounded-2xl border border-slate-700">
+                <div key={index} className={isEducativo ? 'flex items-start gap-5 py-4 border-b border-slate-800' : 'flex items-start gap-5 bg-slate-900/80 p-6 rounded-2xl border border-slate-700'}>
                   <span className={`font-mono text-2xl font-bold ${theme.text}`}>{index + 1}</span>
                   <div>
                     <p className={`font-mono text-2xl font-bold ${theme.text}`}>{item.sintaxis}</p>
@@ -245,7 +312,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
               <p className="text-4xl text-slate-300 leading-snug mb-10">{renderHighlighted(description)}</p>
               <div className="grid grid-cols-1 gap-8">
                 {summary.map((risk, index) => (
-                  <div key={index} className={`flex items-center gap-8 p-8 rounded-2xl border shadow-lg transition-colors ${impactCardClass}`}>
+                  <div key={index} className={isEducativo ? `flex items-center gap-8 p-5 border-l-4 border-transparent transition-colors ${impactCardClass}` : `flex items-center gap-8 p-8 rounded-2xl border shadow-lg transition-colors ${impactCardClass}`}>
                     <div className={`${impactIconClass} flex-shrink-0`}>
                       <svg className="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                     </div>
@@ -262,8 +329,8 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
               <p className="text-4xl text-slate-300 leading-snug mb-10">{renderHighlighted(description)}</p>
               <div className="flex flex-col gap-8">
                 {summary.map((step, index) => (
-                  <div key={index} className="flex items-center gap-8 bg-slate-900/80 p-8 rounded-2xl border-l-8 shadow-lg" style={{ borderLeftColor: theme.border.replace('border-', '') }}>
-                    <div className={`flex-shrink-0 w-14 h-14 rounded-full ${theme.bg} border-2 ${theme.border} flex items-center justify-center`}>
+                  <div key={index} className={isEducativo ? 'flex items-center gap-8 p-5 bg-slate-900/30 border-l-4 border-transparent' : 'flex items-center gap-8 bg-slate-900/80 p-8 rounded-2xl border-l-8 shadow-lg'} style={isEducativo ? undefined : { borderLeftColor: theme.border.replace('border-', '') }}>
+                    <div className={`flex-shrink-0 w-14 h-14 ${isEducativo ? `border-2 ${accent.border}` : `rounded-full ${theme.bg} border-2 ${theme.border}`} flex items-center justify-center`}>
                       <svg className={`w-8 h-8 ${theme.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
                     </div>
                     <p className="text-4xl text-slate-200 font-medium leading-snug">{renderHighlighted(step)}</p>
@@ -274,6 +341,11 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           )}
 
         </div>
+        {isLastEducationalSlide && (
+          <p className={`mt-8 text-3xl font-brand font-bold tracking-wide ${accent.text}`}>
+            {closingMantra}
+          </p>
+        )}
       </div>
 
       {/* PIE DE PÁGINA */}
@@ -284,7 +356,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
           {currentSlide} / {totalSlides}
         </p>
 
-        {isTip && type === 'tip_bullets' ? (
+        {isEducativo && isLastEducationalSlide ? (
           <div className="flex items-center gap-8">
             <p className="flex items-center gap-4 text-white font-bold tracking-widest text-2xl">
               GUARDA ESTE POST
@@ -293,7 +365,7 @@ const PostInstagram = ({ familia = 'alerta', level, type, category, title, descr
             <p className={`text-2xl font-bold tracking-widest ${theme.text}`}>SÍGUENOS PARA MÁS</p>
           </div>
         ) : type !== 'mitigation' ? (
-          <p className="flex items-center gap-4 text-white animate-pulse font-bold tracking-widest text-2xl">
+          <p className={`flex items-center gap-4 text-white font-bold tracking-widest text-2xl ${isEducativo ? 'text-slate-500 tracking-[0.25em]' : 'animate-pulse'}`}>
             DESLIZA
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
           </p>
