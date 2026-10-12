@@ -46,6 +46,8 @@ La reserva reduce el riesgo de trabajo duplicado entre workers. Antes de `media_
 
 Los feeds y artículos se descargan exclusivamente desde una lista de dominios permitidos, con HTTPS, validación DNS, redirecciones manuales y límites de bytes. Consulta [la política de descargas HTTP seguras](docs/secure-http.md).
 
+Los contenedores se ejecutan sin privilegios y el frontend de producción solo está disponible dentro de la red de Compose. Consulta [la política de seguridad de contenedores](docs/container-security.md).
+
 ## Principios operativos
 
 1. `DRY_RUN=true` es el modo seguro predeterminado.

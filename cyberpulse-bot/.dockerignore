@@ -4,6 +4,11 @@
 venv/
 __pycache__/
 *.pyc
+.pytest_cache/
+.pytest-tmp/
+.ruff_cache/
+.coverage
+htmlcov/
 .git/
 data/
 media/
