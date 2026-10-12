@@ -41,7 +41,7 @@ RSS
 
 SQLite reserva cada noticia mediante una actualización atómica con una concesión temporal. Los fallos usan backoff exponencial y, al alcanzar el máximo configurado, el registro queda marcado para revisión manual. Consulta [la política de estados y reintentos](docs/publication-state-machine.md).
 
-La reserva reduce el riesgo de trabajo duplicado entre workers, pero la publicación en Meta todavía necesita reconciliación explícita para resultados ambiguos después de un timeout. Esa limitación debe resolverse antes de escalar horizontalmente.
+La reserva reduce el riesgo de trabajo duplicado entre workers. Antes de `media_publish`, el sistema persiste el `creation_id`; si la respuesta final se pierde, bloquea el reintento automático y exige reconciliación. Consulta [la política de publicación en Meta](docs/meta-publication-safety.md).
 
 ## Principios operativos
 

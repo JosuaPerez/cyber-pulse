@@ -17,7 +17,9 @@ CAMPOS_ACTUALIZABLES = {
     "cves",
     "severidad",
     "ultimo_error",
+    "meta_creation_id",
     "meta_post_id",
+    "meta_publicacion_pendiente",
 }
 
 ESTADOS_TERMINALES = {"publicada_meta", "descartada"}
@@ -77,6 +79,14 @@ def inicializar_db(db_path=None) -> None:
                 "ALTER TABLE publicaciones ADD COLUMN "
                 "requiere_revision INTEGER NOT NULL DEFAULT 0 "
                 "CHECK (requiere_revision IN (0, 1))"
+            ),
+            "meta_creation_id": (
+                "ALTER TABLE publicaciones ADD COLUMN meta_creation_id TEXT"
+            ),
+            "meta_publicacion_pendiente": (
+                "ALTER TABLE publicaciones ADD COLUMN "
+                "meta_publicacion_pendiente INTEGER NOT NULL DEFAULT 0 "
+                "CHECK (meta_publicacion_pendiente IN (0, 1))"
             ),
         }
         for columna, sentencia in migraciones.items():
@@ -237,6 +247,32 @@ def marcar_revision_manual(clave_historial, db_path=None) -> None:
             raise KeyError(f"No existe la publicacion: {clave_historial}")
 
 
+def registrar_publicacion_ambigua(
+    clave_historial,
+    creation_id,
+    error,
+    db_path=None,
+) -> None:
+    """Bloquea reintentos cuando Meta pudo publicar pero no confirmó respuesta."""
+    inicializar_db(db_path)
+    with _conectar(db_path) as conexion:
+        cursor = conexion.execute(
+            """
+            UPDATE publicaciones
+            SET meta_creation_id = ?,
+                meta_publicacion_pendiente = 1,
+                ultimo_error = ?,
+                requiere_revision = 1,
+                reserva_hasta = NULL,
+                actualizado_en = CURRENT_TIMESTAMP
+            WHERE clave_historial = ?
+            """,
+            (creation_id, str(error), clave_historial),
+        )
+        if cursor.rowcount == 0:
+            raise KeyError(f"No existe la publicacion: {clave_historial}")
+
+
 def reanudar_publicacion(clave_historial, db_path=None) -> None:
     """Devuelve manualmente una publicación a la cola desde cero."""
     inicializar_db(db_path)
@@ -247,6 +283,8 @@ def reanudar_publicacion(clave_historial, db_path=None) -> None:
             SET estado = 'detectada',
                 intentos = 0,
                 ultimo_error = NULL,
+                meta_creation_id = NULL,
+                meta_publicacion_pendiente = 0,
                 proximo_reintento_en = NULL,
                 reserva_hasta = NULL,
                 requiere_revision = 0,
@@ -257,6 +295,37 @@ def reanudar_publicacion(clave_historial, db_path=None) -> None:
         )
         if cursor.rowcount == 0:
             raise KeyError(f"No existe la publicacion: {clave_historial}")
+
+
+def listar_publicaciones_ambiguas(db_path=None) -> list[dict]:
+    """Devuelve publicaciones que necesitan reconciliación manual con Meta."""
+    inicializar_db(db_path)
+    with _conectar(db_path) as conexion:
+        conexion.row_factory = sqlite3.Row
+        filas = conexion.execute(
+            """
+            SELECT clave_historial, titulo, meta_creation_id,
+                   ultimo_error, actualizado_en
+            FROM publicaciones
+            WHERE meta_publicacion_pendiente = 1
+            ORDER BY actualizado_en
+            """
+        ).fetchall()
+    return [dict(fila) for fila in filas]
+
+
+def confirmar_publicacion_meta(
+    clave_historial,
+    meta_post_id,
+    db_path=None,
+) -> None:
+    """Registra el post encontrado manualmente en Instagram como publicado."""
+    actualizar_estado(
+        clave_historial,
+        "publicada_meta",
+        db_path,
+        meta_post_id=meta_post_id,
+    )
 
 
 def tema_ya_usado(tema_id, db_path=None) -> bool:
@@ -328,6 +397,13 @@ def actualizar_estado(
             [
                 "reserva_hasta = NULL",
                 "proximo_reintento_en = NULL",
+            ]
+        )
+    if estado == "publicada_meta":
+        asignaciones.extend(
+            [
+                "meta_publicacion_pendiente = 0",
+                "requiere_revision = 0",
             ]
         )
 

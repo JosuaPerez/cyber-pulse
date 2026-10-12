@@ -8,6 +8,7 @@ from app.historial_db import (
     marcar_revision_manual,
     registrar_deteccion,
     registrar_fallo,
+    registrar_publicacion_ambigua,
     reanudar_publicacion,
     reservar_publicacion,
     tema_ya_usado,
@@ -249,3 +250,47 @@ def test_revision_manual_es_terminal_para_el_selector(tmp_path):
 
     assert not ya_procesada(clave, db_path)
     assert reservar_publicacion(clave, db_path)
+
+
+def test_publicacion_ambigua_bloquea_reintento_y_conserva_creation_id(tmp_path):
+    import sqlite3
+
+    db_path = tmp_path / "historial.sqlite3"
+    clave = "publicacion-ambigua"
+    registrar_deteccion(clave, "Noticia", db_path)
+
+    registrar_publicacion_ambigua(
+        clave,
+        "creation-123",
+        "Timeout esperando respuesta",
+        db_path,
+    )
+
+    assert ya_procesada(clave, db_path)
+    assert not reservar_publicacion(clave, db_path)
+
+    with sqlite3.connect(db_path) as conexion:
+        fila = conexion.execute(
+            "SELECT meta_creation_id, meta_publicacion_pendiente, "
+            "requiere_revision, ultimo_error FROM publicaciones "
+            "WHERE clave_historial = ?",
+            (clave,),
+        ).fetchone()
+
+    assert fila == (
+        "creation-123",
+        1,
+        1,
+        "Timeout esperando respuesta",
+    )
+
+    actualizar_estado(clave, "publicada_meta", db_path, meta_post_id="post-456")
+
+    with sqlite3.connect(db_path) as conexion:
+        reconciliada = conexion.execute(
+            "SELECT estado, meta_post_id, meta_publicacion_pendiente, "
+            "requiere_revision FROM publicaciones WHERE clave_historial = ?",
+            (clave,),
+        ).fetchone()
+
+    assert reconciliada == ("publicada_meta", "post-456", 0, 0)
