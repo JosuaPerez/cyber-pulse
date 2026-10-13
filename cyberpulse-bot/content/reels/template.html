@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CyberPulse · Reel educativo</title>
+<style>
+* { box-sizing: border-box; }
+body { margin:0; background:#050912; color:#f3f6ff; font-family:Arial,sans-serif; }
+.stage { width:1080px; height:1920px; position:relative; overflow:hidden; background:radial-gradient(ellipse at 90% 40%,#172346 0%,#080f20 55%,#060b16 100%); padding:175px 105px 260px 85px; }
+.stage::before { content:""; position:absolute; inset:0; background-image:linear-gradient(#ffffff03 1px,transparent 1px),linear-gradient(90deg,#ffffff03 1px,transparent 1px); background-size:70px 70px; pointer-events:none; }
+header { position:relative; display:flex; align-items:center; justify-content:space-between; font-size:28px; letter-spacing:2px; }
+.brand { display:flex; align-items:center; gap:18px; font-weight:800; }
+.brand svg { width:58px; height:58px; }
+.series { font-size:20px; color:#a8bad6; letter-spacing:3px; }
+.progress { height:5px; background:#ffffff14; margin-top:42px; position:relative; }
+.progress span { display:block; height:100%; width:0; background:var(--accent); }
+.scene { position:relative; padding-top:68px; }
+.label { color:var(--accent); font-size:23px; font-weight:bold; letter-spacing:4px; margin-bottom:34px; }
+h1 { font-size:78px; line-height:1.08; letter-spacing:-3px; margin:0; max-width:860px; }
+.emphasis { font-size:38px; line-height:1.35; color:#bccce5; margin:34px 0 44px; min-height:104px; }
+.diagram { height:410px; border:1px solid #ffffff1c; border-radius:30px; background:#080e1bdd; padding:34px; display:flex; flex-direction:column; justify-content:center; gap:18px; }
+.card { border:1px solid #ffffff20; border-radius:18px; padding:22px; display:flex; align-items:center; gap:25px; background:#121e33; }
+.icon { color:var(--accent); font-size:32px; font-weight:bold; width:48px; text-align:center; }
+.card strong { font-size:26px; letter-spacing:1px; }
+.card small { display:block; color:#9ab0ce; font-size:22px; margin-top:10px; }
+.detail { font-family:monospace; font-size:20px; color:var(--accent); letter-spacing:1px; line-height:1.5; margin:23px 0 0; }
+.narration { position:absolute; left:85px; right:115px; bottom:325px; font-size:32px; line-height:1.45; color:#e6edfa; border-left:4px solid var(--accent); padding:12px 0 12px 25px; background:#080f20cc; }
+footer { position:absolute; bottom:245px; left:85px; right:115px; display:flex; justify-content:space-between; color:#9bb1d0; font-size:21px; letter-spacing:1px; }
+.controls { position:fixed; z-index:4; bottom:14px; left:50%; transform:translateX(-50%); display:flex; gap:12px; padding:12px; background:#152138ee; border-radius:14px; }
+button { color:white; background:#253b5e; border:1px solid #6681a4; border-radius:9px; padding:10px 16px; cursor:pointer; font-size:15px; }
+.note { position:fixed; top:10px; right:10px; color:#adbed9; font-size:12px; z-index:3; }
+@media(max-width:1080px) { .stage { transform-origin:top left; } }
+</style>
+<main class="stage" style="--accent:#55dce5">
+  <header><div class="brand"><svg viewBox="0 0 60 60" fill="none"><path d="M2 30h12l8-18 13 36 8-18h15" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg>CyberPulse</div><span class="series">CONCEPTOS EN CLARO</span></header>
+  <div class="progress"><span id="progress"></span></div>
+  <section class="scene"><div class="label" id="label"></div><h1 id="title"></h1><p class="emphasis" id="emphasis"></p><div class="diagram" id="diagram"></div><p class="detail" id="detail"></p></section>
+  <div class="narration" id="narration"></div>
+  <footer><span>@cyberpulse89</span><span id="counter"></span></footer>
+</main>
+<div class="note">VISTA PREVIA · BORRADOR</div>
+<nav class="controls"><button id="play">Reproducir</button><button id="pause">Pausar</button><button id="restart">Reiniciar</button></nav>
+<script>
+const reel = __REEL_DATA__;
+const colors = {cyan:'#55dce5',amber:'#ffbf69',violet:'#aa95ff'};
+const symbols = {accounts:'●',leak:'!',chain:'→',mail:'@',protect:'✓',cta:'+'};
+const stage = document.querySelector('.stage');
+let playing = false, elapsed = 0, last = 0, active = -1;
+const total = reel.scenes.reduce((sum,scene)=>sum+scene.duration,0);
+const audio = reel.audio ? new Audio(reel.audio) : null;
+function renderScene(index) {
+  active=index;
+  const scene=reel.scenes[index];
+  document.getElementById('progress').style.width=`${reel.scenes.slice(0,index).reduce((sum,s)=>sum+s.duration,0)/total*100}%`;
+  stage.style.setProperty('--accent',colors[scene.accent]);
+  for(const key of ['label','title','emphasis','detail','narration']) document.getElementById(key).textContent=scene[key];
+  document.getElementById('counter').textContent=`${String(index+1).padStart(2,'0')} / ${String(reel.scenes.length).padStart(2,'0')}`;
+  const diagram=document.getElementById('diagram');
+  diagram.replaceChildren();
+  for(const [i,text] of scene.cards.entries()) {
+    const card=document.createElement('div'); card.className='card';
+    const icon=document.createElement('span'); icon.className='icon'; icon.textContent=symbols[scene.visual];
+    const copy=document.createElement('div');
+    const title=document.createElement('strong'); title.textContent=text;
+    const sub=document.createElement('small');
+    sub.textContent=scene.visual==='accounts'?'Misma clave reutilizada':scene.visual==='protect'?['Una por servicio','Genera y guarda','Otra barrera'][i]:scene.visual==='chain'?'Correo + contraseña':scene.visual==='leak'?(i?'Correo + contraseña':'Servicio de ejemplo'):scene.visual==='mail'?'Acceso a tu identidad digital':'Ciberseguridad para tu día a día';
+    copy.append(title,sub); card.append(icon,copy); diagram.append(card);
+  }
+}
+function seek(seconds) {
+  elapsed=Math.max(0,Math.min(total,seconds));
+  let end=0,index=reel.scenes.length-1;
+  for(let i=0;i<reel.scenes.length;i++){end+=reel.scenes[i].duration;if(elapsed<end){index=i;break;}}
+  if(index!==active) renderScene(index);
+  document.getElementById('progress').style.width=`${elapsed/total*100}%`;
+}
+function fit(){ const scale=Math.min(innerWidth/1080,(innerHeight-90)/1920); stage.style.transform=`scale(${scale})`; stage.style.marginLeft=`${Math.max(0,(innerWidth-1080*scale)/2)}px`; }
+document.getElementById('play').onclick=async()=>{if(elapsed>=total)seek(0);if(audio){audio.currentTime=elapsed;try{await audio.play();}catch{document.querySelector('.note').textContent='No se pudo reproducir el audio. Reinicia e inténtalo de nuevo.';return;}} playing=true;last=performance.now();};
+document.getElementById('pause').onclick=()=>{playing=false;audio?.pause();};
+document.getElementById('restart').onclick=()=>{playing=false;audio?.pause();if(audio)audio.currentTime=0;seek(0);};
+function tick(now){if(playing){seek(audio?audio.currentTime:elapsed+(now-last)/1000);if(elapsed>=total){playing=false;audio?.pause();}}last=now;requestAnimationFrame(tick);}
+window.renderScene=renderScene;
+window.reelReady=true;
+if(!audio)document.querySelector('.note').textContent='VISTA PREVIA SIN VOZ · TIEMPOS ESTIMADOS';
+seek(0);fit();addEventListener('resize',fit);requestAnimationFrame(tick);
+</script>
+</html>
