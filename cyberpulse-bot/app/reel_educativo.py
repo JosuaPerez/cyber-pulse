@@ -10,9 +10,18 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.voz_educativa import DEFAULT_MODEL, generar_escenas
+
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "content" / "reels" / "template.html"
 PILOT = ROOT / "content" / "reels" / "password-reuse.json"
+
+
+def muestras_silencio(t):
+    import numpy as np
+
+    # MoviePy mezcla buffers (n, canales); un vector (n,) se difunde a (n, n).
+    return np.zeros((len(t), 2)) if isinstance(t, np.ndarray) else np.zeros(2)
 
 
 class Escena(BaseModel):
@@ -55,24 +64,20 @@ def construir_preview(guion: Guion, durations: list[float], audio: bytes | None 
     return TEMPLATE.read_text(encoding="utf-8").replace("__REEL_DATA__", payload)
 
 
-async def generar_narracion(guion: Guion, folder: Path, voice: str) -> list[Path]:
-    import edge_tts
-
-    paths = []
-    for i, scene in enumerate(guion.scenes):
-        path = folder / f"voice-{i:02}.mp3"
-        try:
-            await edge_tts.Communicate(scene.narration, voice, rate="+0%").save(str(path))
-        except Exception:
-            raise RuntimeError(
-                "El servicio de voz no respondió. Puedes revisar el formato con "
-                "--export --silent; esa opción genera un borrador sin narración."
-            ) from None
-        paths.append(path)
-    return paths
+async def generar_narracion(
+    guion: Guion, folder: Path, voice: str | None, provider: str = "edge",
+    model: str = DEFAULT_MODEL,
+) -> list[Path]:
+    return await generar_escenas(
+        [scene.narration for scene in guion.scenes], folder,
+        provider=provider, voice=voice, model=model,
+    )
 
 
-def exportar(guion: Guion, output: Path, voice: str, width: int, silent: bool = False) -> Path:
+def exportar(
+    guion: Guion, output: Path, voice: str | None, width: int, silent: bool = False,
+    provider: str = "edge", model: str = DEFAULT_MODEL,
+) -> Path:
     from moviepy import (
         AudioClip, AudioFileClip, CompositeVideoClip, ImageClip,
         concatenate_audioclips, concatenate_videoclips, vfx,
@@ -81,7 +86,9 @@ def exportar(guion: Guion, output: Path, voice: str, width: int, silent: bool = 
 
     with TemporaryDirectory(prefix="cyberpulse-reel-") as temporary:
         folder = Path(temporary)
-        paths = [] if silent else asyncio.run(generar_narracion(guion, folder, voice))
+        paths = [] if silent else asyncio.run(generar_narracion(
+            guion, output / "voice-cache", voice, provider, model,
+        ))
         resources = []
         try:
             audios = [AudioFileClip(str(path)) for path in paths]
@@ -91,14 +98,14 @@ def exportar(guion: Guion, output: Path, voice: str, width: int, silent: bool = 
             if silent:
                 durations = [max(5, len(s.narration.split()) / 2.5) for s in guion.scenes]
             else:
-                pause = AudioClip(lambda t: 0 * t, duration=0.35, fps=44100)
+                pause = AudioClip(muestras_silencio, duration=0.35, fps=44100)
                 resources.append(pause)
                 segments = [concatenate_audioclips([a, pause]) for a in audios]
                 resources.extend(segments)
                 narration = concatenate_audioclips(segments)
                 resources.append(narration)
                 durations = [segment.duration for segment in segments]
-                audio_path = folder / "narration.mp3"
+                audio_path = output / "narration.mp3"
                 narration.write_audiofile(str(audio_path), logger=None)
                 audio_bytes = audio_path.read_bytes()
             html = construir_preview(guion, durations, audio_bytes)
@@ -127,7 +134,7 @@ def exportar(guion: Guion, output: Path, voice: str, width: int, silent: bool = 
                 image = ImageClip(str(frame)).resized(width=width).with_duration(duration)
                 resources.append(image)
                 # Movimiento ligero; todas las escenas conservan el área segura de lectura.
-                moving = image.resized(lambda t: 1 + 0.006 * min(t / duration, 1))
+                moving = image.resized(lambda t, d=duration: 1 + 0.006 * min(t / d, 1))
                 clip = CompositeVideoClip(
                     [moving.with_position("center")], size=(width, height)
                 ).with_duration(duration).with_effects([vfx.FadeIn(0.15)])
@@ -139,6 +146,7 @@ def exportar(guion: Guion, output: Path, voice: str, width: int, silent: bool = 
             resources.append(video)
             video.write_videofile(
                 str(output / "reel.mp4"), fps=24, codec="libx264", audio_codec="aac",
+                temp_audiofile=str(folder / "mixed-audio.m4a"),
                 preset="fast", ffmpeg_params=["-pix_fmt", "yuv420p", "-movflags", "+faststart"],
                 logger=None,
             )
@@ -155,15 +163,37 @@ def main() -> None:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--export", action="store_true", help="Genera voz y MP4; requiere red")
     parser.add_argument("--silent", action="store_true", help="Exporta un borrador visual sin voz")
-    parser.add_argument("--voice", default="es-CO-GonzaloNeural")
+    parser.add_argument("--voice", help="Voz del proveedor; Gonzalo para Edge, Charon para Gemini")
+    parser.add_argument("--provider", choices=["edge", "gemini"], default="edge")
+    parser.add_argument("--tts-model", default=DEFAULT_MODEL)
+    parser.add_argument("--audio-only", action="store_true", help="Genera las voces sin video")
     parser.add_argument("--width", type=int, choices=[540, 1080], default=1080)
     args = parser.parse_args()
     guion = cargar_guion(args.script)
     output = args.output or ROOT / "media" / "reels" / guion.id
     output.mkdir(parents=True, exist_ok=True)
+    if (args.export or args.audio_only) and not args.silent and args.provider == "gemini":
+        from dotenv import load_dotenv
+
+        load_dotenv(ROOT / ".env")
+    if args.audio_only:
+        if args.silent:
+            parser.error("--audio-only no puede combinarse con --silent")
+        try:
+            paths = asyncio.run(generar_narracion(
+                guion, output / "voice-cache", args.voice, args.provider, args.tts_model,
+            ))
+        except RuntimeError as error:
+            parser.exit(1, f"{error}\n")
+        for path in paths:
+            print(f"Voz: {path.resolve()}")
+        return
     if args.export:
         try:
-            preview = exportar(guion, output, args.voice, args.width, args.silent)
+            preview = exportar(
+                guion, output, args.voice, args.width, args.silent,
+                args.provider, args.tts_model,
+            )
         except RuntimeError as error:
             parser.exit(1, f"{error}\n")
     else:

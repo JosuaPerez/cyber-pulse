@@ -37,6 +37,32 @@ en español colombiano (`es-CO-GonzaloNeural`). Se puede seleccionar otra voz co
 El servicio puede rechazar solicitudes (por ejemplo, HTTP 403); no hay voz de
 respaldo silenciosa ni se presenta una estimación como narración terminada.
 
+### Voz con Gemini
+
+Para usar la alternativa probada con la configuración existente del proyecto:
+
+```powershell
+python -m app.reel_educativo --audio-only --provider gemini --output media/reels/password-reuse-voice
+python -m app.reel_educativo --export --provider gemini --width 540 --output media/reels/password-reuse-voice
+```
+
+Requiere `GEMINI_API_KEY`, cargada desde `cyberpulse-bot/.env` o el entorno.
+Usa explícitamente Gemini 3.8 Flash-Lite TTS y la voz de estudio Charon; no clona la
+voz de ninguna persona. Se puede cambiar con `--tts-model` y `--voice`. La petición
+REST mantiene el texto separado de las instrucciones de lectura y usa `store=false`.
+Referencia: https://ai.google.dev/gemini-api/docs/speech-generation
+
+La generación consume la cuota y, según el plan, puede tener costo. No hay cambio
+automático de proveedor ni reintentos ante cuota agotada. La caché `voice-cache/`
+identifica texto, proveedor, voz, modelo y estilo: si no cambian, el render reutiliza
+el audio y no pide otra síntesis. Los cambios de voz o guion generan una entrada
+nueva. Los archivos antiguos permanecen disponibles para comparar.
+
+`--audio-only` permite escuchar las escenas antes de renderizar. La exportación con
+voz guarda además `narration.mp3`, con pausas de 0.35 segundos entre escenas, y la
+incrusta en la vista previa. El diseño conserva los tiempos medidos del audio real.
+El directorio de salida distinto conserva la muestra visual anterior.
+
 Para revisar el diseño sin depender del proveedor:
 
 ```powershell

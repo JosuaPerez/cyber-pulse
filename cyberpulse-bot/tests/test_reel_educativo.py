@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.reel_educativo import PILOT, cargar_guion, construir_preview
+from app.reel_educativo import PILOT, cargar_guion, construir_preview, muestras_silencio
 
 
 def test_piloto_es_valido_y_preview_no_requiere_servicios_externos():
@@ -30,3 +30,18 @@ def test_tipo_visual_desconocido_se_rechaza():
     data["scenes"][0]["visual"] = "unknown"
     with pytest.raises(ValidationError):
         type(cargar_guion(PILOT)).model_validate(data)
+
+
+def test_pausa_se_mezcla_sin_expandir_el_buffer_de_audio():
+    import numpy as np
+    from moviepy import AudioClip, concatenate_audioclips
+
+    pause = AudioClip(muestras_silencio, duration=0.35, fps=44100)
+    combined = concatenate_audioclips([pause, pause])
+    try:
+        frames = combined.get_frame(np.linspace(0, 0.69, 100))
+        assert frames.shape == (100, 2)
+        assert not frames.any()
+    finally:
+        combined.close()
+        pause.close()
