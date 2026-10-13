@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CyberPulse · Personajes: prueba visual</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#050912;color:#f3f6ff;font-family:Arial,sans-serif}
+.stage{width:1080px;height:1920px;position:relative;overflow:hidden;padding:175px 105px 260px 85px;background:radial-gradient(ellipse at 90% 40%,#172346,#080f20 55%,#060b16)}
+.stage:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff03 1px,transparent 1px),linear-gradient(90deg,#ffffff03 1px,transparent 1px);background-size:70px 70px;pointer-events:none}
+header{display:flex;align-items:center;justify-content:space-between;font-size:28px;font-weight:800;letter-spacing:2px}header small{font-size:20px;color:#a8bad6;font-weight:400}header svg{width:58px;height:58px;vertical-align:middle;margin-right:14px}
+.progress{height:5px;background:#ffffff14;margin-top:42px}.progress div{height:100%;background:#55dce5;width:0}
+.label{margin-top:68px;color:#55dce5;font-size:23px;letter-spacing:4px;font-weight:bold}
+h1{font-size:76px;line-height:1.08;letter-spacing:-3px;margin:32px 0 0}.promise{font-size:37px;color:#bccce5;line-height:1.3;margin-top:30px}
+.visual{position:absolute;left:85px;right:115px;top:720px;height:635px;border:1px solid #ffffff20;border-radius:32px;background:#0a1224;overflow:hidden}
+.world text.large{font-size:26px;fill:#f3f6ff}.world text.password{font-size:25px;fill:#55dce5;letter-spacing:5px}.laptop{fill:#17263c;stroke:#9bb1d0;stroke-width:3}.screen{fill:#050b16;stroke:#55dce5;stroke-width:2}.desk{fill:none;stroke:#8199b8;stroke-width:6;stroke-linecap:round}.packet{fill:#ffbf69;stroke:#ffdbad;stroke-width:2}
+.intro{position:absolute;inset:0;padding:50px;display:flex;flex-direction:column;justify-content:center;gap:24px}.intro div{padding:25px;background:#152239;border:1px solid #ffffff20;border-radius:18px;font-size:30px;display:flex;justify-content:space-between}.intro span{color:#55dce5;font-family:monospace;font-size:23px}
+.intro div.selected{background:#203d4d;border-color:#55dce5;box-shadow:0 0 24px #55dce530}.caption span.current{color:#55dce5}
+.world{width:100%;height:100%}.world text{font-family:Arial,sans-serif;fill:#bccce5;font-size:18px;font-weight:bold}.body{fill:none;stroke-width:9;stroke-linecap:round;stroke-linejoin:round}.door{fill:#152239;stroke:#55dce5;stroke-width:3}.route{fill:none;stroke:#55dce5;stroke-width:3;stroke-dasharray:7 10}.key{fill:none;stroke:#ffbf69;stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+.caption{position:absolute;left:85px;right:115px;bottom:325px;height:150px;background:#080f20;border:1px solid #ffffff22;border-radius:18px;padding:22px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:46px;font-weight:700;line-height:1.25}.detail{position:absolute;top:1390px;left:85px;color:#9bb1d0;font-family:monospace;font-size:21px}footer{position:absolute;left:85px;right:115px;bottom:245px;display:flex;justify-content:space-between;font-size:21px;color:#9bb1d0}
+.controls{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:3}button{background:#253b5e;color:white;border:1px solid #6681a4;border-radius:9px;padding:12px 18px;cursor:pointer;font-size:15px}
+</style>
+<main class="stage">
+<header><div><svg viewBox="0 0 60 60" fill="none"><path d="M2 30h12l8-18 13 36 8-18h15" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg>CyberPulse</div><small>CONCEPTOS EN CLARO</small></header>
+<div class="progress"><div id="progress"></div></div>
+<div class="label" id="label">EL GANCHO</div><h1>¿La misma contraseña<br>en todas partes?</h1>
+<div class="promise">Una filtración puede abrir varias puertas.</div>
+<div class="visual">
+<div class="intro" id="intro"><div>TIENDA ONLINE <span>MISMA CLAVE</span></div><div>CORREO <span>MISMA CLAVE</span></div><div>RED SOCIAL <span>MISMA CLAVE</span></div></div>
+<svg class="world" id="world" viewBox="0 0 880 800" aria-label="Una persona escribe en una laptop y otra intenta reutilizar la contraseña filtrada">
+<text x="65" y="75" class="large" id="world-title">Una contraseña. Varias cuentas.</text>
+<g id="accounts"><rect class="door" x="90" y="110" width="220" height="58" rx="12"/><text x="123" y="148">TIENDA ONLINE</text><rect class="door" x="350" y="110" width="155" height="58" rx="12"/><text x="380" y="148">CORREO</text><rect class="door" x="545" y="110" width="235" height="58" rx="12"/><text x="580" y="148">RED SOCIAL</text></g>
+<path class="route" id="route" d="M330 390Q440 235 595 390"/>
+<g id="hero">
+<path class="desk" d="M70 465h320m-275 0v140m230-140v140"/><path d="M112 472v-110m0 110h92" class="desk"/>
+<g class="body" stroke="#55dce5"><circle cx="156" cy="315" r="45" fill="#e7f6fc" stroke-width="3"/><circle cx="143" cy="313" r="4" fill="#172346" stroke="none"/><circle cx="170" cy="313" r="4" fill="#172346" stroke="none"/><path d="M145 330q12 10 25 0" stroke="#172346" stroke-width="3"/><path d="M156 360v108h68l12 92m-12 0h36"/><path id="hero-arm" d="M157 385l54 56 40-10"/></g>
+<rect class="laptop" x="232" y="332" width="155" height="115" rx="8"/><rect class="screen" x="242" y="343" width="135" height="91" rx="4"/><path class="laptop" d="M225 447h172l-17 14H239Z"/>
+<text x="251" y="368" style="font-size:14px" id="user-site">MI CUENTA</text><text x="251" y="405" class="password" id="typed-user"></text><text x="137" y="645" class="large">TÚ</text>
+</g>
+<g id="other">
+<path class="desk" d="M475 465h320m-275 0v140m230-140v140"/><path class="desk" d="M740 472v-110m0 110h-92"/>
+<g class="body" stroke="#aa95ff"><path d="M640 325q0-78 70-75 62 4 61 79l-30 31h-70Z" fill="#4a4271" stroke-width="3"/><circle cx="708" cy="315" r="39" fill="#ece7fc" stroke-width="3"/><circle cx="697" cy="313" r="4" fill="#172346" stroke="none"/><circle cx="721" cy="313" r="4" fill="#172346" stroke="none"/><path d="M697 333h22" stroke="#172346" stroke-width="3"/><path d="M708 360v108h-65l-12 92m12 0h-37"/><path id="other-arm" d="M706 385l-45 56-41-10"/></g>
+<rect class="laptop" x="490" y="332" width="155" height="115" rx="8"/><rect class="screen" x="500" y="343" width="135" height="91" rx="4"/><path class="laptop" d="M482 447h172l-17 14H496Z"/>
+<text x="509" y="368" style="font-size:14px" id="other-site">OTRA CUENTA</text><text x="509" y="405" class="password" id="typed-other"></text><text x="547" y="645" class="large">ATACANTE</text>
+</g>
+<g id="packet"><rect class="packet" x="-98" y="-24" width="196" height="48" rx="12"/><text x="-78" y="7" style="fill:#10192b;font-size:18px">CLAVE EXPUESTA</text></g>
+<text id="attempt" x="478" y="711" style="fill:#ffbf69;font-size:24px">INTENTO DE ACCESO</text>
+<g id="email-story" opacity="0">
+ <rect x="90" y="230" width="300" height="230" rx="26" fill="#17263c" stroke="#55dce5" stroke-width="4"/>
+ <path d="M120 280h240v140H120Z M120 280l120 85 120-85" fill="none" stroke="#55dce5" stroke-width="8" stroke-linejoin="round"/>
+ <text x="145" y="505" class="large">TU CORREO</text>
+ <path id="email-routes" d="M400 345Q460 275 550 275 M400 365Q460 450 550 450" class="route"/>
+ <rect x="560" y="215" width="250" height="120" rx="20" fill="#152239" stroke="#ffbf69" stroke-width="3"/>
+ <text x="585" y="265">RECUPERAR</text><text x="585" y="300">CUENTA A</text>
+ <rect x="560" y="390" width="250" height="120" rx="20" fill="#152239" stroke="#ffbf69" stroke-width="3"/>
+ <text x="585" y="440">RECUPERAR</text><text x="585" y="475">CUENTA B</text>
+ <text x="95" y="620" style="fill:#ffbf69;font-size:23px">SI CONSIGUEN ENTRAR, PUEDEN INTENTARLO.</text>
+</g>
+<g id="protect-story" opacity="0">
+ <rect x="100" y="145" width="400" height="480" rx="28" fill="#152239" stroke="#55dce5" stroke-width="4"/>
+ <text x="145" y="215" class="large">GESTOR DE CLAVES</text>
+ <g id="vault-rows">
+  <rect x="132" y="260" width="335" height="80" rx="12" fill="#203d4d"/><text x="151" y="293">TIENDA</text><text x="151" y="323" style="fill:#55dce5">CLAVE A · ••••••••</text>
+  <rect x="132" y="365" width="335" height="80" rx="12" fill="#282842"/><text x="151" y="398">CORREO</text><text x="151" y="428" style="fill:#aa95ff">CLAVE B · ••••••••</text>
+  <rect x="132" y="470" width="335" height="80" rx="12" fill="#3c3226"/><text x="151" y="503">RED SOCIAL</text><text x="151" y="533" style="fill:#ffbf69">CLAVE C · ••••••••</text>
+ </g>
+ <g id="second-factor">
+  <rect x="575" y="230" width="215" height="340" rx="30" fill="#17263c" stroke="#aa95ff" stroke-width="5"/>
+  <rect x="592" y="258" width="180" height="260" rx="12" fill="#080f20"/>
+  <path d="M645 370l25 25 58-64" stroke="#55dce5" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <text x="610" y="457">VERIFICACIÓN</text><text x="616" y="485">ADICIONAL</text>
+  <text x="551" y="620" style="fill:#aa95ff;font-size:22px">OTRA BARRERA</text>
+ </g>
+</g>
+<g id="cta-story" opacity="0">
+ <path d="M240 240h100v170l-50-35-50 35Z" fill="none" stroke="#55dce5" stroke-width="9" stroke-linejoin="round"/>
+ <text x="204" y="470" class="large">GUÁRDALO</text>
+ <g id="share-icon"><circle cx="545" cy="310" r="21" fill="#aa95ff"/><circle cx="650" cy="245" r="21" fill="#aa95ff"/><circle cx="650" cy="380" r="21" fill="#aa95ff"/><path d="M545 310l105-65M545 310l105 70" stroke="#aa95ff" stroke-width="8"/></g>
+ <text x="527" y="470" class="large">COMPÁRTELO</text>
+ <text x="235" y="625" style="fill:#f3f6ff;font-size:36px">@cyberpulse89</text>
+</g>
+</svg></div>
+<div class="caption" id="caption"></div><footer><span>@cyberpulse89</span><span id="footer-label">PRUEBA DE RITMO</span></footer>
+</main>
+<nav class="controls"><button id="play">Reproducir</button><button id="pause">Pausar</button><button id="restart">Reiniciar</button></nav>
+<script>
+const embeddedAudio=__AUDIO_DATA__;
+const demoDuration=__DURATION__;
+const cues=__SUBTITLES__;
+const story=__STORY_DATA__;
+const audio=embeddedAudio?new Audio(embeddedAudio):null;
+let elapsed=0,playing=false,last=0;
+const byId=id=>document.getElementById(id);
+const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
+function renderAt(t){
+ elapsed=Math.max(0,Math.min(demoDuration,t));
+ for(const id of ['email-story','protect-story','cta-story'])byId(id).style.opacity=0;
+ for(const id of ['hero','accounts','world-title'])byId(id).style.opacity=1;
+ byId('email-routes').style.opacity=1;byId('world-title').textContent='Una contraseña. Varias cuentas.';
+ byId('user-site').textContent='MI CUENTA';byId('other-site').textContent='OTRA CUENTA';
+ byId('attempt').textContent='INTENTO DE ACCESO';byId('route').style.strokeDashoffset='0';
+ [...byId('intro').children].forEach((card,n)=>{card.firstChild.textContent=['TIENDA ONLINE','CORREO','RED SOCIAL'][n]+' ';card.querySelector('span').textContent='MISMA CLAVE';});
+ byId('progress').style.width=`${elapsed/demoDuration*100}%`;
+ const reveal=Math.min(1,ease((elapsed-3)/.45)*(1-ease((elapsed-7.3)/.45))+ease((elapsed-8.2)/.45));byId('intro').style.opacity=1-reveal;byId('world').style.opacity=reveal;
+ byId('intro').style.transform=`scale(${1+0.09*ease((elapsed-.7)/1.7)})`;
+ [...byId('intro').children].forEach((card,i)=>{card.classList.toggle('selected',elapsed>=1+i*.65&&elapsed<7.8);card.style.transform=`translateX(${elapsed>=1+i*.65?8:0}px)`;});
+ const visual=document.querySelector('.visual');visual.style.top=`${720-reveal*300}px`;visual.style.height=`${635+reveal*340}px`;
+ document.querySelector('h1').style.opacity=1-reveal;document.querySelector('.promise').style.opacity=1-reveal;
+ byId('label').textContent=elapsed<3?'UNA CLAVE · VARIAS CUENTAS':elapsed<7.8?'VEAMOS QUÉ PUEDE PASAR':'EL EJEMPLO: UNA TIENDA ONLINE';
+ document.querySelector('h1').innerHTML=elapsed>=7.8?'Todo empieza<br>en una tienda.':'¿La misma contraseña<br>en todas partes?';
+ document.querySelector('.promise').textContent=elapsed>=7.8?'Imagina que tus datos quedan expuestos.':'Una filtración puede abrir varias puertas.';
+ const caption=byId('caption');const line=document.createElement('div');
+ const cue=cues.find(c=>c.start<=elapsed&&elapsed<c.end);
+ if(cue)cue.words.forEach((word,i)=>{if(i)line.append(document.createTextNode(' '));const span=document.createElement('span');span.textContent=word.text;if(word.start<=elapsed&&elapsed<word.end)span.className='current';line.append(span);});
+ else if(!cues.length)line.textContent=elapsed<3?'Una contraseña para varias cuentas.':elapsed<7.8?'Si se filtra, otras cuentas quedan en riesgo.':'Imagina una filtración en una tienda.';
+ caption.replaceChildren(line);
+ byId('footer-label').textContent=`PRUEBA DE RITMO · ${demoDuration} S`;
+ let focus=ease((elapsed-3)/.5)*(1-ease((elapsed-4.8)/.5));
+ focus=Math.max(focus,ease((elapsed-8.2)/.6));
+ byId('world').setAttribute('viewBox',`${30*focus} ${180*focus} ${880-420*focus} ${800-240*focus}`);
+ byId('typed-user').textContent='•'.repeat(Math.min(6,Math.max(0,Math.floor((elapsed-1.6)*3))));
+ const tap=Math.sin(elapsed*18)*4;byId('hero-arm').setAttribute('transform',`translate(0 ${elapsed<4||elapsed>8.2?tap:0})`);
+ const visitor=ease((elapsed-4.4)/0.6);byId('other').style.opacity=visitor;
+ byId('other-arm').setAttribute('transform',`translate(0 ${elapsed>6?tap:0})`);
+ byId('typed-other').textContent='•'.repeat(Math.min(6,Math.max(0,Math.floor((elapsed-6)*4))));
+ const leak=Math.max(ease((elapsed-3.8)/0.4)*(1-ease((elapsed-6)/0.3)),ease((elapsed-10)/.4));const transfer=elapsed>8.2?0:ease((elapsed-4.5)/1.4);
+ byId('packet').style.opacity=leak;byId('packet').setAttribute('transform',`translate(${315+transfer*255} ${260+Math.sin(transfer*Math.PI)*-50})`);
+ byId('route').style.opacity=elapsed<4?0:0.6;byId('route').style.stroke='#ffbf69';
+ byId('attempt').style.opacity=ease((elapsed-6.8)/0.5);
+ const accounts=byId('accounts').querySelectorAll('rect');accounts.forEach((el,i)=>el.style.stroke=elapsed>3.8&&(i===0||elapsed>6.8)?'#ffbf69':'#55dce5');
+ if(story){byId('footer-label').textContent='CONCEPTOS EN CLARO';if(elapsed>=12)renderStory(elapsed);}
+}
+function renderStory(t){
+ const index=story.scenes.findIndex(s=>t<s.end);const i=index<0?story.scenes.length-1:index;
+ const scene=story.scenes[i],local=t-scene.start;
+ const visual=document.querySelector('.visual');const title=document.querySelector('h1'),promise=document.querySelector('.promise');
+ const top=byId('world-title');const accounts=byId('accounts').querySelectorAll('rect');
+ const intro=[...byId('intro').children];
+ let panel=false,focus=[0,0,880,800];
+ for(const id of ['hero','accounts','world-title'])byId(id).style.opacity=1;
+ for(const id of ['email-story','protect-story','cta-story','packet','route','attempt','other'])byId(id).style.opacity=0;
+ byId('user-site').textContent='TIENDA';byId('other-site').textContent='CORREO';
+ byId('typed-user').textContent='••••••';byId('typed-other').textContent='••••••';
+ byId('label').textContent=scene.label;title.textContent=scene.title;promise.textContent=scene.emphasis;
+ top.textContent=i===1?'Una tienda. Datos expuestos.':i===2?'Una clave, varios intentos.':scene.title;
+ accounts.forEach(el=>el.style.stroke='#ffbf69');
+ byId('hero-arm').setAttribute('transform','');byId('other-arm').setAttribute('transform','');
+ intro.forEach((card,n)=>{card.classList.remove('selected');card.style.transform='';card.firstChild.textContent=['TIENDA ONLINE','CORREO','RED SOCIAL'][n]+' ';card.querySelector('span').textContent='MISMA CLAVE';});
+ if(i===1){
+  focus=local<6?[30,180,460,560]:[0,0,880,800];
+  byId('packet').style.opacity=1;const transfer=ease((local-5)/2);
+  byId('packet').setAttribute('transform',`translate(${315+transfer*255} ${260})`);
+  byId('other').style.opacity=ease((local-5)/.6);byId('route').style.opacity=transfer;
+ }else if(i===2){
+  byId('other').style.opacity=1;byId('hero').style.opacity=.35;
+  const selected=Math.floor(local/1.5)%2;byId('other-site').textContent=selected?'RED SOCIAL':'CORREO';
+  byId('typed-other').textContent='•'.repeat(Math.min(6,Math.floor((local%1.5)*6)));
+  byId('other-arm').setAttribute('transform',`translate(0 ${Math.sin(t*18)*4})`);
+  byId('route').style.opacity=.75;byId('route').style.strokeDashoffset=String(-local*30);
+  byId('attempt').style.opacity=1;byId('attempt').textContent='PRUEBAN LA COMBINACIÓN';
+  if(local<2.5)focus=[430,210,435,540];else if(local<5)focus=[470,310,220,230];
+  else if(local<7.7)focus=[0,0,880,800];else panel=true;
+ }else if(i===3){
+  for(const id of ['hero','accounts'])byId(id).style.opacity=0;
+  byId('email-story').style.opacity=1;top.textContent='El correo conecta otras cuentas.';
+  byId('email-routes').style.strokeDashoffset=String(-local*25);
+  focus=local<2.8?[40,160,430,510]:local<5.8?[340,150,500,540]:[0,0,880,800];
+ }else if(i===4){
+  panel=local<2.7;
+  for(const id of ['hero','accounts'])byId(id).style.opacity=0;
+  byId('protect-story').style.opacity=1;top.textContent='Claves distintas. Otra barrera.';
+  byId('second-factor').style.opacity=ease((local-5.7)/.6);
+  intro.forEach((card,n)=>{card.querySelector('span').textContent=['CLAVE A','CLAVE B','CLAVE C'][n];card.classList.add('selected');});
+  byId('vault-rows').querySelectorAll('rect').forEach((el,n)=>{el.style.opacity=.55+.45*ease((local-2.7-n*.6)/.5);});
+  focus=local<6?[60,110,500,580]:[0,0,880,800];
+ }else if(i===5){
+  for(const id of ['hero','accounts'])byId(id).style.opacity=0;
+  if(local<2.8){byId('email-story').style.opacity=1;byId('email-routes').style.opacity=0;focus=[40,180,430,480];top.textContent='Empieza por tu correo.';}
+  else{byId('cta-story').style.opacity=1;top.textContent='Aprende. Aplica. Comparte.';byId('share-icon').style.opacity=ease((local-4.3)/.5);}
+  if(local>8){panel=true;title.textContent='Ciberseguridad que puedes aplicar.';promise.textContent='CyberPulse · @cyberpulse89';}
+  intro.forEach((card,n)=>{card.firstChild.textContent=['APRENDE','APLICA','COMPARTE'][n]+' ';card.querySelector('span').textContent=['CONCEPTOS','PROTECCIÓN','CONOCIMIENTO'][n];card.classList.add('selected');});
+ }
+ byId('intro').style.transform='scale(1)';byId('intro').style.opacity=panel?1:0;byId('world').style.opacity=panel?0:1;
+ title.style.opacity=panel?1:0;promise.style.opacity=panel?1:0;
+ visual.style.top=panel?'720px':'420px';visual.style.height=panel?'635px':'975px';
+ byId('world').setAttribute('viewBox',focus.join(' '));
+ byId('footer-label').textContent=`CONCEPTOS EN CLARO · ${i+1}/6`;
+}
+function fit(){const scale=Math.min(innerWidth/1080,(innerHeight-85)/1920);const stage=document.querySelector('.stage');stage.style.transformOrigin='top left';stage.style.transform=`scale(${scale})`;stage.style.marginLeft=`${Math.max(0,(innerWidth-1080*scale)/2)}px`;}
+byId('play').onclick=async()=>{if(elapsed>=demoDuration)renderAt(0);if(audio){audio.currentTime=Math.min(elapsed,audio.duration||0);await audio.play();}playing=true;last=performance.now();};
+byId('pause').onclick=()=>{playing=false;audio?.pause();};byId('restart').onclick=()=>{playing=false;audio?.pause();if(audio)audio.currentTime=0;renderAt(0);};
+function tick(now){if(playing){renderAt(audio&&!audio.ended?audio.currentTime:elapsed+(now-last)/1000);if(elapsed>=demoDuration){playing=false;audio?.pause();}}last=now;requestAnimationFrame(tick);}
+window.renderAt=renderAt;renderAt(0);fit();addEventListener('resize',fit);requestAnimationFrame(tick);
+</script></html>

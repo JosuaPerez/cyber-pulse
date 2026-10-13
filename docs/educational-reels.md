@@ -63,6 +63,29 @@ voz guarda además `narration.mp3`, con pausas de 0.35 segundos entre escenas, y
 incrusta en la vista previa. El diseño conserva los tiempos medidos del audio real.
 El directorio de salida distinto conserva la muestra visual anterior.
 
+### Subtítulos sincronizados
+
+```powershell
+python -m app.reel_educativo --export --provider gemini --subtitles --width 540 --output media/reels/password-reuse-voice
+```
+
+Reutiliza las seis voces de `voice-cache/`. Gemini 3.5 Transcribe analiza el audio
+completo y devuelve marcas de inicio y fin por palabra. La transcripción consume
+cuota de Gemini; sus marcas se guardan por hash del audio y modelo. El sistema
+rechaza marcas desordenadas, solapadas o fuera del audio, así como una transcripción
+que difiera sustancialmente del guion. No se sustituyen marcas fallidas por tiempos
+calculados a partir de la longitud del texto.
+
+Los bloques tienen hasta cinco palabras y se separan en pausas y cambios de escena.
+La vista previa y el MP4 usan las mismas marcas; la palabra actual cambia al color
+de la escena. El MP4 incorpora la capa de subtítulos separada del zoom del fondo.
+Se crean `reel-subtitled.mp4`, `preview-subtitled.html`, `subtitles.json` y
+`subtitles.srt`; se conservan el reel y la vista previa anteriores. El SRT permite
+revisar las frases y reutilizarlas en un editor, pero no contiene el resaltado por
+palabra. Las marcas automáticas requieren una revisión audiovisual antes de publicar.
+
+Referencia: https://ai.google.dev/gemini-api/docs/transcribe
+
 Para revisar el diseño sin depender del proveedor:
 
 ```powershell
@@ -82,9 +105,9 @@ Volver a exportar el mismo ID reemplaza los artefactos anteriores.
 La v1 usa tarjetas e interfaces esquemáticas, texto de apoyo por escena, acentos
 cian/ámbar/violeta y movimiento suave de cámara. El MP4 utiliza capturas de cada
 escena con zoom ligero y entrada breve; no reproduce toda la interacción HTML.
-El texto inferior muestra el fragmento completo de narración: todavía no son
-subtítulos palabra por palabra. Las siguientes iteraciones pueden añadir diagramas
-animados, marcas temporales de voz y subtítulos más breves.
+Sin `--subtitles`, el texto inferior muestra el fragmento completo de narración.
+Con esa opción, cambia a bloques breves con resaltado sincronizado por palabra.
+Las siguientes iteraciones pueden añadir diagramas animados.
 
 Revisar antes de publicar:
 
