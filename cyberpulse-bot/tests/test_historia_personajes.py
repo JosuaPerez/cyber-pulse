@@ -2,7 +2,32 @@ import wave
 
 import pytest
 
-from app.demo_personajes import construir_historia
+from app.demo_personajes import ROOT, construir_historia, construir_portada, dimensiones_exportacion
+
+
+@pytest.mark.parametrize("width,height,scale", [(540, 960, 0.5), (1080, 1920, 1)])
+def test_dimensiones_verticales(width, height, scale):
+    assert dimensiones_exportacion(width) == (width, height, scale)
+
+
+def test_rechaza_resolucion_no_soportada():
+    with pytest.raises(ValueError, match="ancho"):
+        dimensiones_exportacion(720)
+
+
+def test_portada_reutiliza_personajes_sin_audio_ni_guion():
+    html = (ROOT / "content/reels/characters-demo.html").read_text(encoding="utf-8")
+    cover = construir_portada(html)
+    assert '__CHARACTERS_SVG__' not in cover
+    assert 'id="hero"' in cover
+    assert 'id="other"' in cover
+    assert '__AUDIO_DATA__' not in cover
+    assert '__STORY_DATA__' not in cover
+
+
+def test_portada_rechaza_plantilla_sin_personajes():
+    with pytest.raises(ValueError, match="personajes"):
+        construir_portada("<html></html>")
 
 
 def guardar_wav(path, seconds):
