@@ -58,3 +58,23 @@ representan un acceso exitoso garantizado ni protección infalible.
 La salida de revisión usa 540 × 960 a 24 fps. Las versiones anteriores se conservan
 en sus directorios. Se reutiliza audio y transcripción, sin nuevas peticiones de IA.
 La voz, los subtítulos y el montaje deben revisarse juntos antes de publicar.
+
+## Exportación final y portada
+
+```powershell
+python -m app.demo_personajes --full --export --width 1080 --cover --audio media/reels/password-reuse-voice/narration.mp3 --subtitles media/reels/password-reuse-voice/subtitles.json --voice-cache media/reels/password-reuse-voice/voice-cache --output media/reels/password-reuse-final
+```
+
+Exporta a 1080 × 1920, 24 fps, H.264 (CRF 18) y AAC. Renderiza los SVG a la
+resolución final, sin ampliar el video anterior. Conserva la narración, las marcas
+de subtítulos y la línea de tiempo aprobadas, sin nuevas llamadas a IA. El valor
+predeterminado de `--width` sigue siendo 540 para las revisiones rápidas.
+
+`--cover` genera `cover.png` a 1080 × 1920 y `cover.html`, usando los mismos
+personajes del reel. Puede ejecutarse sin `--export` para revisar solo la portada.
+`cover-grid-preview.png` es una prueba de recorte central 3:4, no una garantía del
+recorte que aplique Instagram: confirma el encuadre en la aplicación antes de
+publicar. Usa `cover.png` como portada, no el archivo de prueba de recorte.
+
+Los MP4, PNG, HTML generados y la voz permanecen en `media/`, excluido de Git.
+No se publica ni se sube contenido automáticamente a Instagram.
