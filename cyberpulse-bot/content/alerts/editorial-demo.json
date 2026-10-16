@@ -1,0 +1,8 @@
+{
+  "slide_1": {"title": "Un correo urgente no prueba que sea real", "description": "Un mensaje puede presionarte para abrir un enlace. Verifica su origen antes de actuar."},
+  "slide_2": {"description": "En este ejemplo ficticio, un correo anuncia que una cuenta será suspendida y exige una verificación inmediata. El aspecto del mensaje no confirma quién lo envió: un atacante puede imitar nombres, logos y estilos de una organización."},
+  "slide_3": {"description": "El enlace puede llevar a una página que imita el inicio de sesión. Si introduces tus credenciales allí, podrías entregárselas al atacante. La urgencia es una señal para verificar, no una prueba por sí sola."},
+  "slide_4": {"description": "Qué podría ocurrir si entregas tus credenciales", "points": ["Acceso no autorizado a la cuenta afectada.", "Riesgo para otras cuentas si reutilizas la contraseña.", "Envío de mensajes desde una cuenta comprometida."]},
+  "slide_5": {"description": "Verifica el aviso sin usar el enlace del mensaje", "points": ["Abre la app o escribe la dirección oficial por tu cuenta.", "Comprueba el aviso dentro de tu cuenta o con soporte por un canal conocido.", "Si entregaste tu clave, cámbiala en el sitio oficial y revisa sesiones activas."]},
+  "meta": {"familia": "alerta", "severidad": "medium", "estado_explotacion": "desconocido", "cves": [], "fuente_nombre": "DEMO EDITORIAL · EJEMPLO FICTICIO", "fuente_url": ""}
+}

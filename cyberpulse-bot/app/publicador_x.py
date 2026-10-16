@@ -5,7 +5,17 @@ from dotenv import load_dotenv
 # Cargar las credenciales del .env
 load_dotenv()
 
+
+def indices_imagenes_hilo(cantidad):
+    if cantidad == 4:
+        return [[0], [1, 2], [3]]
+    if cantidad == 5:
+        return [[0], [1, 2], [3, 4]]
+    raise ValueError("El hilo requiere un carrusel completo de 4 o 5 imágenes")
+
+
 def publicar_hilo_x(rutas_imagenes, datos_json):
+    grupos = indices_imagenes_hilo(len(rutas_imagenes))
     print("🐦 Preparando hilo para X (Twitter)...")
     
     # 1. Extraer credenciales
@@ -30,7 +40,7 @@ def publicar_hilo_x(rutas_imagenes, datos_json):
         return
         
     try:
-        # 3. Subir las 5 imágenes a los servidores de X
+        # 3. Subir todas las imágenes del carrusel validado.
         print("📤 Subiendo imágenes a X...")
         media_ids = []
         for ruta in rutas_imagenes:
@@ -52,15 +62,15 @@ def publicar_hilo_x(rutas_imagenes, datos_json):
 
         # 5. Publicar el Hilo en cascada
         print("📝 Publicando Tweet 1 (Portada)...")
-        tweet_1 = client.create_tweet(text=texto_tweet_1, media_ids=[media_ids[0]])
+        tweet_1 = client.create_tweet(text=texto_tweet_1, media_ids=[media_ids[i] for i in grupos[0]])
         tweet_1_id = tweet_1.data['id']
         
         print("📝 Publicando Tweet 2 (Análisis)...")
-        tweet_2 = client.create_tweet(text=texto_tweet_2, media_ids=[media_ids[1], media_ids[2]], in_reply_to_tweet_id=tweet_1_id)
+        tweet_2 = client.create_tweet(text=texto_tweet_2, media_ids=[media_ids[i] for i in grupos[1]], in_reply_to_tweet_id=tweet_1_id)
         tweet_2_id = tweet_2.data['id']
         
         print("📝 Publicando Tweet 3 (Mitigación)...")
-        client.create_tweet(text=texto_tweet_3, media_ids=[media_ids[3], media_ids[4]], in_reply_to_tweet_id=tweet_2_id)
+        client.create_tweet(text=texto_tweet_3, media_ids=[media_ids[i] for i in grupos[2]], in_reply_to_tweet_id=tweet_2_id)
         
         print("✅ ¡Hilo publicado con éxito en la cuenta de X!")
         
