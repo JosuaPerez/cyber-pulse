@@ -18,12 +18,14 @@ def main():
     parser.add_argument("--output", type=Path, default=ROOT / "media/alert-editorial")
     parser.add_argument("--stress", action="store_true", help="Comprueba textos en los límites del esquema")
     parser.add_argument("--variant", choices=["editorial", "clara"], default="editorial")
-    parser.add_argument("--example", choices=["demo", "firefox"], default="demo")
+    parser.add_argument("--example", choices=["demo", "firefox", "pwnescape"], default="demo")
     args = parser.parse_args()
     url = urlsplit(args.url)
     if url.scheme != "http" or url.hostname not in {"127.0.0.1", "localhost"}:
         parser.error("La demostración requiere un servidor HTTP local")
     data = json.loads((ROOT / "content/alerts/editorial-demo.json").read_text(encoding="utf-8"))
+    if args.example == "pwnescape":
+        data = json.loads((ROOT / "content/alerts/pwnescape-review.json").read_text(encoding="utf-8"))
     if args.example == "firefox":
         sample_path = ROOT.parent / "cyberpulse-templates/src/content/real-alerts.json"
         sample = json.loads(sample_path.read_text(encoding="utf-8"))["update"]

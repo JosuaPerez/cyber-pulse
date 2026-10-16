@@ -9,6 +9,12 @@ test('versión explícita con aviso de Mozilla', () => {
   assert.equal(readSupportVisual(visual, source).version, '158');
 });
 
+test('diagrama de aislamiento solo por tipo explícito, sin textos arbitrarios ni versión de Firefox', () => {
+  assert.deepEqual(readSupportVisual(JSON.stringify({ tipo: 'vm_isolation', version: '158', label: '<script>' }), 'https://example.org/research'), { tipo: 'vm_isolation' });
+  assert.equal(readSupportVisual('{"tipo":"vm_isolation"}', 'http://example.org'), null);
+  assert.equal(readSupportVisual('{"tipo":"unknown"}', source), null);
+});
+
 test('datos ausentes, dominios engañosos y texto arbitrario no dibujan versiones', () => {
   assert.equal(readSupportVisual('{}', source), null);
   assert.equal(readSupportVisual('null', source), null);

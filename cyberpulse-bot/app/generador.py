@@ -9,6 +9,14 @@ from app import config
 def visual_apoyo_validado(meta):
     """Acepta datos explícitos revisados; no deduce versiones del título."""
     visual = meta.get("visual_apoyo")
+    if isinstance(visual, dict) and visual.get("tipo") == "vm_isolation":
+        try:
+            source = urllib.parse.urlsplit(meta.get("fuente_url", ""))
+            if source.scheme == "https" and source.hostname:
+                return {"tipo": "vm_isolation"}
+        except (ValueError, TypeError):
+            pass
+        return {}
     if not isinstance(visual, dict) or visual.get("tipo") != "firefox_version":
         return {}
     version = visual.get("version", "")
