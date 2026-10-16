@@ -5,10 +5,19 @@ from datetime import datetime, timezone
 from playwright.sync_api import sync_playwright
 
 from app import config
+from app.editorial_alertas import EditorialAlerta
 
 def visual_apoyo_validado(meta):
     """Acepta datos explícitos revisados; no deduce versiones del título."""
     visual = meta.get("visual_apoyo")
+    if isinstance(visual, dict) and visual.get("tipo") == "editorial":
+        clase, nodos = visual.get("clase"), visual.get("nodos", [])
+        if clase == "resumen":
+            return {"tipo": "editorial", "clase": "resumen", "nodos": []}
+        if (clase in {"cadena", "comparacion"} and isinstance(nodos, list) and 2 <= len(nodos) <= 3
+                and all(isinstance(n, str) and 2 <= len(n.strip()) <= 26 for n in nodos)):
+            return {"tipo": "editorial", "clase": clase, "nodos": nodos}
+        return {"tipo": "editorial", "clase": "resumen", "nodos": []}
     if isinstance(visual, dict) and visual.get("tipo") == "vm_isolation":
         try:
             source = urllib.parse.urlsplit(meta.get("fuente_url", ""))
@@ -48,6 +57,7 @@ def parametros_variante_alerta(meta, variante):
         "cves": json.dumps(meta.get("cves", []), ensure_ascii=False),
         **({"preparedOn": datetime.now(timezone.utc).strftime("%d/%m/%Y"),
             "sourceDate": meta.get("fecha_fuente", ""),
+            "editorialData": json.dumps(meta.get("editorial", {}), ensure_ascii=False),
             "supportVisual": json.dumps(visual_apoyo_validado(meta))} if variante == "clara" else {}),
     }
 
@@ -61,6 +71,18 @@ def cantidad_imagenes_esperada(meta, variante=None):
 def construir_alerta_clara(datos):
     """Reordena datos validados sin resumir, truncar ni inventar alcance."""
     shared = {"familia": "alerta", "level": datos.get("meta", {}).get("severidad", "medium")}
+    editorial = datos.get("meta", {}).get("editorial")
+    if editorial:
+        e = EditorialAlerta.model_validate(editorial)
+        return [
+            {**shared, "type": "cover", "title": e.gancho, "description": e.resumen},
+            {**shared, "type": "scope", "title": "A quién le concierne", "description": e.hecho},
+            {**shared, "type": "context_risks", "title": "Qué sabemos y qué no", "description": e.detalle,
+             "summary": json.dumps([], ensure_ascii=False)},
+            {**shared, "type": "mitigation", "title": "Qué puedes hacer", "description": "Medidas según tu situación",
+             "summary": json.dumps([f"{'Para equipos de TI' if a.rol == 'administradores' else 'Para ti'}: {a.texto}"
+                                     for a in e.acciones], ensure_ascii=False)},
+        ]
     return [
         {**shared, "type": "cover", "category": "LO IMPORTANTE",
          "title": datos["slide_1"]["title"], "description": datos["slide_1"]["description"]},

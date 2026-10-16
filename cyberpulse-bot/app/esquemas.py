@@ -4,6 +4,7 @@ import re
 from typing import Literal
 
 from pydantic import BaseModel, model_validator
+from app.editorial_alertas import EditorialAlerta
 
 # Límites de longitud (caracteres). Se usan en la validación Y en el prompt,
 # así nunca se desincronizan.
@@ -72,6 +73,7 @@ class AnalisisIA(BaseModel):
     mitigacion: list[str]
     visual_tipo: Literal["none", "vm_isolation"] = "none"
     visual_evidencia: str = ""
+    editorial: EditorialAlerta | None = None
     items: list["ItemCheatsheet"] | None = None
     items_checklist: list["ItemChecklist"] | None = None
     tip_slides: list["SlideTip"] | None = None

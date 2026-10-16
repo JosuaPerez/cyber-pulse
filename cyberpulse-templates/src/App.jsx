@@ -34,6 +34,7 @@ function leerPostDesdeUrl(search) {
     sourceDate: params.get('sourceDate') || '',
     preparedOn: params.get('preparedOn') || '',
     supportVisual: params.get('supportVisual') || '{}',
+    editorialData: params.get('editorialData') || '{}',
     exploitation: params.get('exploitation') || 'desconocido',
     cves: params.get('cves') || '[]',
   };

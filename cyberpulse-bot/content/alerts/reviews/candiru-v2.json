@@ -1,0 +1,28 @@
+{
+  "fuente_nombre": "Citizen Lab · Informe de investigación",
+  "fuente_url": "https://citizenlab.ca/research/how-discover-tech-turned-targeted-ads-into-a-pipeline-for-spyware/",
+  "fecha_fuente": "15/10/2026",
+  "fecha_revision": "16/10/2026",
+  "nota_revision": "Edición manual contrastada con el informe original. No confirma actividad actual ni compromiso individual.",
+  "editorial": {
+    "gancho": "Software espía mediante anuncios, sin hacer clic",
+    "resumen": "Citizen Lab documentó ataques dirigidos con anuncios contra Al Jazeera en 2024 y 2025.",
+    "audiencia": "mixta",
+    "hecho": "La investigación vincula esos ataques con el software espía Candiru, entregado mediante anuncios.",
+    "alcance": "Puede interesar a personas y organizaciones que quieran revisar su exposición a publicidad maliciosa. El caso documentado no demuestra que cualquier anuncio infecte a cualquier persona.",
+    "limite": "El informe no confirma que tu dispositivo esté infectado ni que la campaña siga activa hoy.",
+    "temporalidad": "historica",
+    "evidencia_temporal": "In 2024 and 2025",
+    "detalle": "Los anuncios permitían identificar objetivos y entregar software espía sin hacer clic. Ver un anuncio no equivale a una infección confirmada.",
+    "acciones": [
+      {"rol": "personas", "texto": "Usa un bloqueador de anuncios confiable; reduce riesgos, no garantiza protección total.", "orientacion_general": false, "evidencia": "Use a trusted ad-blocking extension"},
+      {"rol": "personas", "texto": "Si tienes riesgo elevado, busca ayuda especializada para revisar tu seguridad.", "orientacion_general": false, "evidencia": "we strongly recommend seeking expert help"},
+      {"rol": "administradores", "texto": "Revisa con tu equipo el filtrado de anuncios y rastreo en los dispositivos de trabajo.", "orientacion_general": true, "evidencia": ""}
+    ],
+    "caption": "¿Un anuncio sin hacer clic? Citizen Lab documentó ataques dirigidos con software espía contra Al Jazeera en 2024 y 2025. No significa que cualquier anuncio infecte tu equipo ni confirma actividad actual. El bloqueo de anuncios puede reducir riesgos, pero no garantiza protección total. Si tienes riesgo elevado, busca ayuda especializada. ¿Sabías que este tipo de ataque no requiere hacer clic?",
+    "evidencias": ["via targeted online advertisements"],
+    "visual": "resumen",
+    "nodos": [],
+    "evidencia_relacion": ""
+  }
+}
