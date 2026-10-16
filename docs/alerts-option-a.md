@@ -1,5 +1,9 @@
 # Alertas diarias · dirección aprobada: opción A
 
+Para nuevas alertas, consultar [el contrato común v2](alerts-editorial-v2.md).
+Sustituye la ficha especial VM descrita más abajo; los ejemplos previos quedan
+como muestras congeladas y compatibilidad, no como la lógica de nuevas noticias.
+
 La opción A se llama `clara` en configuración. Identidad cian/azul, jerarquía
 legible y cuatro diapositivas: resumen, contexto/alcance reportado, detalle con
 riesgos y fuente, y medidas al cierre. No se fuerza

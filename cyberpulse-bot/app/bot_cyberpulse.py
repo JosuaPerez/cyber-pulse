@@ -1,4 +1,5 @@
 import logging
+import json
 import time
 from enum import Enum
 
@@ -376,6 +377,15 @@ def procesar_una_noticia(bot):
                 logger.info("DRY_RUN activo. Hilo de X: %s", hilo_x)
 
             archivo_pendiente = config.IMAGENES_DIR.parent / "post_pendiente.txt"
+            (config.IMAGENES_DIR.parent / "analisis_pendiente.json").write_text(
+                json.dumps(datos_procesados, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            (config.IMAGENES_DIR.parent / "referencia_tecnica.txt").write_text(
+                f"Fuente: {meta.get('fuente_url', '')}\n\n"
+                f"{datos_procesados.get('slide_3', {}).get('description', '')}\n\n"
+                "Material técnico para revisión; no implica compromiso de un equipo.\n",
+                encoding="utf-8",
+            )
             with archivo_pendiente.open("w", encoding="utf-8") as archivo:
                 archivo.write("CAPTION\n")
                 archivo.write(caption)
