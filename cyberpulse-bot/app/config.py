@@ -54,6 +54,16 @@ R2_ENDPOINT_URL = f"https://{_R2_ACCOUNT_ID_HOST}.r2.cloudflarestorage.com"
 DRY_RUN = _get_bool("DRY_RUN", True)
 PUBLICAR_EN_X = _get_bool("PUBLICAR_EN_X", False)
 
+
+def _get_alert_variant() -> str:
+    value = os.getenv("ALERTAS_VARIANTE", "clasica").strip().lower()
+    if value not in {"clasica", "clara", "editorial"}:
+        raise RuntimeError("ALERTAS_VARIANTE debe ser clasica, clara (opción A) o editorial.")
+    return value
+
+
+ALERTAS_VARIANTE = _get_alert_variant()
+
 DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
 MEDIA_DIR = Path(os.getenv("MEDIA_DIR", "media"))
 IMAGENES_DIR = MEDIA_DIR / "imagenes"

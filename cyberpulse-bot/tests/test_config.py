@@ -9,6 +9,23 @@ def test_dry_run_tiene_default_seguro(monkeypatch):
     assert config._get_bool("DRY_RUN", True) is True
 
 
+def test_variante_de_alertas_conserva_clasica_por_defecto(monkeypatch):
+    monkeypatch.delenv("ALERTAS_VARIANTE", raising=False)
+    assert config._get_alert_variant() == "clasica"
+
+
+@pytest.mark.parametrize("value", ["clasica", "clara", "editorial", " CLARA "])
+def test_variante_alertas_valida(monkeypatch, value):
+    monkeypatch.setenv("ALERTAS_VARIANTE", value)
+    assert config._get_alert_variant() == value.strip().lower()
+
+
+def test_variante_invalida_no_activa_otro_diseno_silenciosamente(monkeypatch):
+    monkeypatch.setenv("ALERTAS_VARIANTE", "aleatoria")
+    with pytest.raises(RuntimeError, match="ALERTAS_VARIANTE"):
+        config._get_alert_variant()
+
+
 @pytest.mark.parametrize("valor", ["1", "true", "yes", "on", "TRUE"])
 def test_get_bool_acepta_valores_verdaderos(monkeypatch, valor):
     monkeypatch.setenv("TEST_BOOLEAN", valor)

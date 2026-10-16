@@ -1,0 +1,35 @@
+{
+  "update": {
+    "sourceName": "Mozilla", "sourceDate": "13/10/2026", "sourceUrl": "https://www.mozilla.org/en-US/security/advisories/mfsa2026-106/",
+    "level": "high", "layout": "update", "seriesLabel": "ACTUALIZACIONES", "statusText": "Explotación activa: no indicada en este aviso", "cves": "[\"CVE-2026-109704\",\"CVE-2026-109705\"]",
+    "slides": [
+      {"type": "cover", "title": "Firefox 158 corrige fallos de seguridad", "description": "Mozilla publicó una actualización con impacto alto. Revisa qué versión usas."},
+      {"type": "problem", "title": "¿Usas Firefox? Revisa tu versión", "description": "El aviso MFSA 2026-106 identifica Firefox 158 como versión corregida. Si administras varios equipos, comprueba cuáles recibieron la actualización."},
+      {"type": "detail", "title": "Qué contiene la corrección", "description": "Incluye fallos de escalada de privilegios, aislamiento y uso de memoria. El aviso detalla cada vulnerabilidad; no todas tienen el mismo impacto."},
+      {"type": "impact", "title": "Qué indica el aviso", "description": "Separa gravedad de explotación confirmada", "summary": ["Impacto global alto, según Mozilla.", "Hay múltiples vulnerabilidades corregidas.", "El aviso no afirma que todas se estén explotando."]},
+      {"type": "mitigation", "title": "Comprueba la actualización", "description": "No basta con haber visto la notificación", "summary": ["Abre Acerca de Firefox y revisa la versión instalada.", "Instala la actualización disponible por el canal oficial.", "Reinicia cuando se solicite y vuelve a comprobar la versión."]}
+    ]
+  },
+  "editorial": {
+    "sourceName": "Huntress", "sourceDate": "Informe: septiembre de 2026", "sourceUrl": "https://www.huntress.com/threat-library/adversary-tactics/september-2026",
+    "level": "unclassified", "layout": "editorial", "seriesLabel": "CAMPAÑA DOCUMENTADA", "statusText": "Actividad observada en septiembre de 2026",
+    "slides": [
+      {"type": "cover", "title": "Power BI como señuelo de phishing", "description": "Huntress observó correos que llevaban a una página pública de Power BI y después a una descarga maliciosa."},
+      {"type": "problem", "title": "El dominio no cuenta toda la historia", "description": "La página mostraba un falso botón de descarga. Al pulsarlo, la víctima pasaba a un sitio controlado por los atacantes. No era una vulnerabilidad de Power BI descrita por el informe."},
+      {"type": "detail", "title": "De una descarga al acceso remoto", "description": "La cadena entregaba clientes de ScreenConnect controlados por los atacantes. Un segundo cliente añadía otra vía de acceso remoto."},
+      {"type": "impact", "title": "Qué cambia después del clic", "description": "El riesgo no termina en el correo", "summary": ["Un servicio legítimo puede alojar un señuelo.", "La descarga puede habilitar acceso remoto no autorizado.", "Huntress detuvo actividad antes de que avanzara."]},
+      {"type": "mitigation", "title": "Verifica antes de instalar", "description": "Medidas para usuarios y equipos de TI", "summary": ["Confirma las descargas inesperadas por otro canal.", "Reporta el mensaje a tu equipo de seguridad.", "TI: investiga clientes ScreenConnect inesperados."]}
+    ]
+  },
+  "context": {
+    "sourceName": "Discord", "sourceDate": "Actualización: 09/10/2025", "sourceUrl": "https://discord.com/press-releases/update-on-security-incident-involving-third-party-customer-service",
+    "level": "unclassified", "layout": "context", "seriesLabel": "CASO HISTÓRICO · 2025", "statusText": "Incidente de 2025 · no es una alerta nueva",
+    "slides": [
+      {"type": "cover", "title": "Discord: datos del soporte expuestos", "description": "Un incidente en un proveedor afectó datos de algunos usuarios que habían contactado con soporte."},
+      {"type": "problem", "title": "Qué confirmó Discord", "description": "El acceso afectó información del servicio de atención al cliente. Discord indicó que revocó el acceso del proveedor e inició la notificación a los usuarios afectados."},
+      {"type": "detail", "title": "Qué datos, y cuáles no", "description": "El aviso incluye contacto, mensajes con soporte y datos parciales de facturación. Excluye contraseñas, datos de autenticación y tarjetas completas."},
+      {"type": "impact", "title": "El alcance no era igual para todos", "description": "No generalices un dato a todas las cuentas", "summary": ["Algunos casos podían incluir imágenes de identificación.", "No se accedió al resto de mensajes de Discord.", "La notificación individual detallaba el posible impacto."]},
+      {"type": "mitigation", "title": "Consulta el aviso de tu caso", "description": "Contexto histórico para entender el alcance", "summary": ["Consulta la comunicación oficial si fuiste notificado.", "Desconfía de mensajes que usen el incidente como gancho.", "Verifica cualquier contacto con el soporte oficial."]}
+    ]
+  }
+}

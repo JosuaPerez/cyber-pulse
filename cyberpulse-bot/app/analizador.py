@@ -81,9 +81,23 @@ def nombre_fuente(url: str) -> str:
 
 # ---------------------------------------------------------------- prompt ---
 def construir_system_prompt() -> str:
+    enfoque_claro = ""
+    if app_config.ALERTAS_VARIANTE == "clara":
+        enfoque_claro = """
+ESTILO PARA ALERTAS CLARAS:
+- Escribe para personas que quieren saber si les afecta y qué hacer; explica tecnicismos.
+- portada_titulo: producto o situación reconocible y utilidad concreta, sin clickbait ni miedo.
+- problema: prioriza producto, versiones y condiciones de exposición SOLO si la fuente los aporta.
+  Si faltan, conserva esa incertidumbre; nunca concluyas que todos están afectados.
+- mitigacion: acciones concretas, comprensibles y priorizadas. No inventes parches ni versiones.
+- Evita introducciones de relleno, repetir el titular y frases como "bajo la lupa".
+El render reordenará los datos a cuatro diapositivas; conserva TODOS los campos del esquema.
+"""
     return f"""Eres el analista de CyberPulse (@CyberPulse89), una cuenta de threat intelligence \
 en español para estudiantes y profesionales de Blue Team. Lees una fuente en inglés y produces \
 contenido en español técnico, preciso y accionable.
+
+{enfoque_claro}
 
 REGLAS DE VERACIDAD (las más importantes):
 1. Usa SOLO información presente en <fuente>. Si un dato no aparece, no lo inventes.

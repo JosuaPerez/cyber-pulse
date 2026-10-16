@@ -195,7 +195,8 @@ def test_timeout_de_media_publish_se_marca_como_ambiguo(monkeypatch):
     assert all("access_token" not in llamada["data"] for llamada in sesion.posts)
 
 
-def test_publicacion_confirmada_persiste_meta_post_id(monkeypatch):
+@pytest.mark.parametrize("cantidad", [4, 5])
+def test_publicacion_confirmada_persiste_meta_post_id(monkeypatch, cantidad):
     sesion = SesionMeta(
         [
             RespuestaMeta({"id": "creation-ok"}),
@@ -224,9 +225,10 @@ def test_publicacion_confirmada_persiste_meta_post_id(monkeypatch):
     )
 
     resultado = bot.publicar_carrusel_local(
-        [f"slide-{indice}.png" for indice in range(1, 6)],
+        [f"slide-{indice}.png" for indice in range(1, cantidad + 1)],
         "Caption",
         clave_historial="noticia-ok",
+        cantidad_esperada=cantidad,
     )
 
     assert resultado is ResultadoPublicacion.PUBLICADA
@@ -237,3 +239,20 @@ def test_publicacion_confirmada_persiste_meta_post_id(monkeypatch):
         {"meta_post_id": "post-ok"},
     )
     assert all("access_token" not in llamada["data"] for llamada in sesion.posts)
+
+
+@pytest.mark.parametrize("esperadas,recibidas", [(5, 4), (4, 3), (4, 5)])
+def test_plan_de_imagenes_incompleto_no_sube_archivos(monkeypatch, esperadas, recibidas):
+    bot = _bot_meta(SesionMeta([]))
+    uploads = []
+    monkeypatch.setattr(bot_cyberpulse, "subir_imagen_publica", lambda p: uploads.append(p))
+    result = bot.publicar_carrusel_local([f"{i}.png" for i in range(recibidas)], "Texto",
+                                       clave_historial="test", cantidad_esperada=esperadas)
+    assert result is ResultadoPublicacion.FALLIDA
+    assert uploads == []
+
+
+def test_no_admite_una_cantidad_arbitraria_para_publicar():
+    bot = _bot_meta(SesionMeta([]))
+    with pytest.raises(ValueError, match="cantidad esperada"):
+        bot.publicar_carrusel_local([], "Texto", clave_historial="test", cantidad_esperada=3)

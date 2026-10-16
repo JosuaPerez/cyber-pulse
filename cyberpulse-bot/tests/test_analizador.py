@@ -19,6 +19,19 @@ TEXTO_FUENTE = (
 NOTICIA = {"title": "Acme VPN flaw exploited", "summary": "x", "link": "https://www.bleepingcomputer.com/news/acme"}
 
 
+def test_estilo_claro_no_cambia_esquema_ni_relaja_veracidad(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    prompt = analizador.construir_system_prompt()
+    assert "ESTILO PARA ALERTAS CLARAS" in prompt
+    assert "conserva TODOS los campos" in prompt
+    assert "Nunca deduzcas ni completes un CVE" in prompt
+
+
+def test_estilo_clasico_conserva_prompt_anterior(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clasica")
+    assert "ESTILO PARA ALERTAS CLARAS" not in analizador.construir_system_prompt()
+
+
 def analisis_valido(**cambios):
     datos = {
         "es_relevante": True,

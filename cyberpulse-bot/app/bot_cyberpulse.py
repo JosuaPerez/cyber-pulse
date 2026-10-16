@@ -16,7 +16,7 @@ from app.historial_db import (
     registrar_publicacion_ambigua,
 )
 from app.lector_rss import obtener_noticia_nueva
-from app.generador import generar_imagenes_carrusel
+from app.generador import cantidad_imagenes_esperada, generar_imagenes_carrusel
 from app.publicador_x import publicar_hilo_x
 
 logging.basicConfig(
@@ -158,7 +158,7 @@ class CyberPulseBot:
         )
         return False
 
-    def publicar_carrusel_local(self, rutas_imagenes, caption, clave_historial=None):
+    def publicar_carrusel_local(self, rutas_imagenes, caption, clave_historial=None, *, cantidad_esperada=5):
         """Orquesta la subida, ensamblaje y publicación del carrusel completo.
 
         FIX 1: en cuanto Meta confirma la publicación, se escribe
@@ -177,9 +177,12 @@ class CyberPulseBot:
                 "clave_historial es obligatoria para publicar de forma reconciliable"
             )
 
-        if len(rutas_imagenes) != 5:
+        if cantidad_esperada not in {4, 5}:
+            raise ValueError("La cantidad esperada debe ser 4 o 5")
+        if len(rutas_imagenes) != cantidad_esperada:
             logger.error(
-                "Se requieren exactamente 5 imagenes para publicar; se recibieron %d",
+                "Se requieren exactamente %d imagenes para publicar; se recibieron %d",
+                cantidad_esperada,
                 len(rutas_imagenes),
             )
             return ResultadoPublicacion.FALLIDA
@@ -358,6 +361,9 @@ def procesar_una_noticia(bot):
         rutas_carrusel = generar_imagenes_carrusel(datos_procesados)
         if not rutas_carrusel:
             raise RuntimeError("No se generaron imagenes para el carrusel")
+        esperadas = cantidad_imagenes_esperada(meta)
+        if len(rutas_carrusel) != esperadas:
+            raise RuntimeError(f"Carrusel incompleto: {len(rutas_carrusel)}/{esperadas}")
         actualizar_estado(clave, "renderizada")
 
         caption = datos_procesados.get("caption", "")
@@ -380,6 +386,9 @@ def procesar_una_noticia(bot):
                     f"Severidad: {meta.get('severidad', '')}\n"
                     f"CVEs: {', '.join(meta.get('cves', []))}\n"
                 )
+                archivo.write(f"\nImágenes del carrusel completo: {esperadas}\n")
+                for ruta in rutas_carrusel:
+                    archivo.write(f"{ruta}\n")
             logger.info("Post pendiente guardado en: %s", archivo_pendiente)
             marcar_revision_manual(clave)
             return
@@ -391,6 +400,7 @@ def procesar_una_noticia(bot):
             rutas_carrusel,
             caption,
             clave_historial=clave,
+            cantidad_esperada=esperadas,
         )
         if resultado is ResultadoPublicacion.AMBIGUA:
             logger.critical(
