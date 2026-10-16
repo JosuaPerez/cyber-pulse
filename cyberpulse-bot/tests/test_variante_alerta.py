@@ -107,6 +107,14 @@ def test_mockup_requiere_version_explicita_y_fuente_mozilla():
     assert generador.visual_apoyo_validado({"fuente_url": meta["fuente_url"]}) == {}
 
 
+def test_visual_aislamiento_no_infiere_version_ni_se_activa_por_titular():
+    assert generador.visual_apoyo_validado({"fuente_url": "https://example.org/research", "visual_apoyo": {
+        "tipo": "vm_isolation", "version": "158"}}) == {"tipo": "vm_isolation"}
+    assert generador.visual_apoyo_validado({"title": "VM escape Linux"}) == {}
+    assert generador.visual_apoyo_validado({"fuente_url": "http://example.org", "visual_apoyo": {
+        "tipo": "vm_isolation"}}) == {}
+
+
 @pytest.mark.parametrize("url,version", [
     ("https://mozilla.org.attacker.invalid/en-US/security/advisories/test/", "158"),
     ("http://www.mozilla.org/en-US/security/advisories/test/", "158"),

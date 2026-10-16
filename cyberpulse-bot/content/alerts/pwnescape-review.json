@@ -1,0 +1,8 @@
+{
+  "slide_1": {"title": "¿Administras VM en Linux? Revisa este fallo", "description": "PwnEscape puede romper el aislamiento entre una máquina virtual y el equipo que la ejecuta."},
+  "slide_2": {"description": "Si administras equipos que ejecutan máquinas virtuales, revisa el aviso de tu distribución o proveedor. Si solo usas una VM en la nube, consulta al proveedor: no controlas el kernel del anfitrión. La noticia no prueba que tu entorno esté afectado."},
+  "slide_3": {"description": "CVE-2026-99999 afecta al procesamiento de red de Linux. La investigación demostró lectura de memoria y escape al anfitrión. El fallo no reside en el código de KVM."},
+  "slide_4": {"description": "Impactos descritos en la investigación", "points": ["Lectura de memoria del equipo anfitrión", "Pérdida de aislamiento entre invitado y anfitrión", "Ejecución de código en el anfitrión en la demostración"]},
+  "slide_5": {"description": "Actúa según tu rol y las instrucciones de tu proveedor", "points": ["Consulta el aviso de tu distribución o proveedor y comprueba si tu entorno está afectado.", "Si administras el anfitrión, aplica la corrección siguiendo el procedimiento del proveedor.", "Verifica que la corrección esté activa y reinicia solo según las instrucciones del proveedor."]},
+  "meta": {"familia": "alerta", "severidad": "high", "fuente_nombre": "PWNAI Research · PRUEBA EDITORIAL", "fuente_url": "https://www.pwn.ai/blog/pwnescape", "estado_explotacion": "desconocido", "cves": ["CVE-2026-99999"], "visual_apoyo": {"tipo": "vm_isolation"}}
+}

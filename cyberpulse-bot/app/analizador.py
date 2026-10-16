@@ -71,6 +71,8 @@ def obtener_texto_fuente(noticia: dict) -> str:
     else:
         texto = _limpiar_html(noticia.get("summary", ""))
         log.info("Resumen RSS usado como fallback: %d caracteres", len(texto))
+    if len(texto.strip()) < 160:
+        raise ErrorAnalisis("Fuente insuficiente: se requiere artículo o resumen de al menos 160 caracteres, no solo el título")
     return f"{noticia.get('title', '')}\n\n{texto}"[:MAX_CHARS_FUENTE]
 
 
@@ -87,9 +89,23 @@ def construir_system_prompt() -> str:
 ESTILO PARA ALERTAS CLARAS:
 - Escribe para personas que quieren saber si les afecta y qué hacer; explica tecnicismos.
 - portada_titulo: producto o situación reconocible y utilidad concreta, sin clickbait ni miedo.
+- Prioriza a quién le sirve: por ejemplo, "¿Administras VM en Linux? Revisa este fallo".
+  No conviertas cualquier fallo técnico en un riesgo para todos los usuarios.
 - problema: prioriza producto, versiones y condiciones de exposición SOLO si la fuente los aporta.
   Si faltan, conserva esa incertidumbre; nunca concluyas que todos están afectados.
+- Distingue quién actúa: administrador del equipo anfitrión, usuario de una máquina virtual
+  o cliente de un proveedor. Explica anfitrión como el equipo que ejecuta las máquinas virtuales.
+  No atribuyas a un usuario control sobre el kernel del proveedor. No repitas aquí el vector técnico.
 - mitigacion: acciones concretas, comprensibles y priorizadas. No inventes parches ni versiones.
+- Para actualizaciones: consultar el aviso oficial del producto/distribución, aplicar su corrección
+  y verificarla; reiniciar solo según sus instrucciones. No asumas que un número de versión
+  prueba la ausencia del parche: algunas distribuciones aplican backports.
+- No uses "jailers" como instrucción para principiantes. Los controles complementarios nunca
+  sustituyen la corrección. Si solo hay dos medidas defendibles, la tercera puede ser comprobar
+  el resultado o consultar al proveedor; no rellenes con herramientas ajenas al caso.
+- visual_tipo: vm_isolation SOLO cuando la fuente describa explícitamente un escape de una
+  máquina virtual al anfitrión. visual_evidencia: cita textual breve (máximo 300 caracteres)
+  de esa relación, sin traducir ni parafrasear. En otro caso usa none y evidencia vacía.
 - Evita introducciones de relleno, repetir el titular y frases como "bajo la lupa".
 El render reordenará los datos a cuatro diapositivas; conserva TODOS los campos del esquema.
 """
@@ -137,6 +153,52 @@ Tweet 3: impacto y mitigación clave.
 
 
 # ------------------------------------------------------------ verificación ---
+def evidencia_aislamiento_valida(evidencia: str, texto_fuente: str) -> bool:
+    cita = " ".join(evidencia.split()).casefold()
+    fuente = " ".join(texto_fuente.split()).casefold()
+    senales = [r"\b(vms?|guests?|virtual machines?|máquinas? virtual(?:es)?)\b",
+               r"\b(hosts?|anfitri[oó]n(?:es)?)\b", r"escap\w*|break(?:ing)?[ -]out"]
+    negacion = re.search(r"\b(no|not|cannot|never|prevent|prevents|prevented)\b", cita)
+    return (20 <= len(cita) <= 300 and cita in fuente and not negacion
+            and all(re.search(p, cita) for p in senales))
+
+
+def preparar_alerta_clara(a: AnalisisIA, texto_fuente: str) -> AnalisisIA:
+    """Aplica una ficha editorial conservadora a escapes explícitos del cuerpo.
+
+    No depende de que la IA copie correctamente una cita ni de que siga las
+    instrucciones de estilo. Sin una frase apta no aplica esta ficha.
+    """
+    cuerpo = texto_fuente.partition("\n\n")[2]
+    evidencia = next((s.strip() for s in re.split(r"(?<=[.!?])\s+", cuerpo)
+                      if evidencia_aislamiento_valida(s.strip(), cuerpo)), "")
+    if not evidencia:
+        return a
+    return a.model_copy(update={
+        "visual_tipo": "vm_isolation", "visual_evidencia": evidencia,
+        "severidad": "high" if a.severidad == "critical" and a.estado_explotacion != "explotacion_activa" else a.severidad,
+        "portada_titulo": "¿Administras VM? Revisa este fallo de aislamiento",
+        "problema": "Si administras máquinas virtuales, comprueba el alcance en el aviso del producto o proveedor. "
+                    "Si solo usas una VM contratada, consulta al proveedor: no controlas su equipo anfitrión. "
+                    "La noticia no demuestra que tu entorno esté afectado.",
+        "mitigacion": [
+            "Consulta el aviso del producto, distribución o proveedor y comprueba si tu entorno está afectado.",
+            "Si administras el anfitrión, sigue las medidas y correcciones indicadas por el proveedor.",
+            "Verifica que las medidas estén aplicadas; reinicia solo según las instrucciones del proveedor.",
+        ],
+        "caption": "Un fallo de aislamiento puede permitir que una máquina virtual acceda al equipo que la ejecuta. "
+                   "Revisa el alcance y las medidas del aviso; si solo usas una VM contratada, consulta al proveedor. "
+                   "¿Sabes quién administra el equipo anfitrión de tus máquinas virtuales?",
+        "hilo_x": [
+            "Un escape de aislamiento puede permitir que una máquina virtual acceda al equipo anfitrión. "
+            "Comprueba el alcance descrito en la fuente antes de asumir que tu entorno está afectado.",
+            a.dato_tecnico,
+            "Consulta el aviso y las medidas de tu proveedor. Si administras el anfitrión, verifica su aplicación "
+            "y reinicia solo según sus instrucciones.",
+        ],
+    })
+
+
 def verificar_contra_fuente(a: AnalisisIA, texto_fuente: str) -> list[str]:
     """Comprobaciones deterministas contra la fuente. Devuelve la lista de problemas."""
     problemas: list[str] = []
@@ -158,6 +220,19 @@ def verificar_contra_fuente(a: AnalisisIA, texto_fuente: str) -> list[str]:
     for version in set(re.findall(r"\b\d+\.\d+\.\d+(?:\.\d+)?\b", generado)):
         if version not in texto_fuente:
             problemas.append(f"la versión {version} no aparece en la fuente; elimínala")
+
+    if app_config.ALERTAS_VARIANTE == "clara":
+        if any(re.search(r"\bjailers?\b", medida, re.IGNORECASE) for medida in a.mitigacion):
+            problemas.append("Explica medidas aplicables al lector sin recomendar jailers; no sustituyas el parche")
+        if a.visual_tipo == "vm_isolation":
+            if not evidencia_aislamiento_valida(a.visual_evidencia, texto_fuente):
+                problemas.append("visual vm_isolation requiere cita literal de la fuente con VM, host y escape; usa none si falta")
+            if a.severidad == "critical" and a.estado_explotacion != "explotacion_activa":
+                problemas.append("Un escape desde una VM requiere acceso previo: usa high salvo explotación activa confirmada")
+        for medida in a.mitigacion:
+            if re.search(r"virtualizaci[oó]n anidada|nested virtualization", medida, re.IGNORECASE):
+                if not re.search(r"virtualizaci[oó]n anidada|nested virtualization", texto_fuente, re.IGNORECASE):
+                    problemas.append("No recomiendes deshabilitar virtualización anidada si la fuente no lo indica")
 
     return problemas
 
@@ -200,13 +275,22 @@ def analizar_noticia(client, noticia: dict, modelo: str = MODELO) -> dict:
             if not analisis.es_relevante:
                 raise NoticiaDescartada(analisis.motivo_descarte)
 
+            if app_config.ALERTAS_VARIANTE == "clara":
+                analisis = preparar_alerta_clara(analisis, texto)
+                # model_copy no valida: revalidar la ficha antes de renderizar.
+                analisis = AnalisisIA.model_validate(analisis.model_dump())
+
             problemas = verificar_contra_fuente(analisis, texto)
             if problemas:
                 raise ValueError("; ".join(problemas))
             if not analisis.caption.strip().endswith("?"):
                 raise ValueError("caption debe terminar con una pregunta directa")
 
-            return a_formato_legacy(analisis, nombre_fuente(url), url)
+            resultado = a_formato_legacy(analisis, nombre_fuente(url), url)
+            if app_config.ALERTAS_VARIANTE == "clara" and analisis.visual_tipo == "vm_isolation":
+                resultado["meta"]["visual_apoyo"] = {"tipo": "vm_isolation"}
+                resultado["meta"]["visual_evidencia"] = analisis.visual_evidencia.strip()
+            return resultado
 
         except NoticiaDescartada:
             raise

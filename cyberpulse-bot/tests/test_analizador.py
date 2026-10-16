@@ -17,6 +17,7 @@ TEXTO_FUENTE = (
     "remote code execution. The vendor rated it CVSS 9.8 and released version 5.2.1 to fix it."
 )
 NOTICIA = {"title": "Acme VPN flaw exploited", "summary": "x", "link": "https://www.bleepingcomputer.com/news/acme"}
+OBTENER_TEXTO_REAL = analizador.obtener_texto_fuente
 
 
 def test_estilo_claro_no_cambia_esquema_ni_relaja_veracidad(monkeypatch):
@@ -157,3 +158,84 @@ def test_prompt_usa_margen_de_seguridad():
 def test_validacion_conserva_limite_real_del_caption():
     with pytest.raises(ValidationError, match="caption tiene 1001 caracteres"):
         AnalisisIA.model_validate_json(analisis_valido(caption="x" * 1001))
+
+
+def test_visual_aislamiento_requiere_cita_y_llega_al_render(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    evidencia = "The guest can escape to the host through the networking stack."
+    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: TEXTO_FUENTE + evidencia)
+    cliente = ClienteFalso([analisis_valido(visual_tipo="vm_isolation", visual_evidencia=evidencia)])
+    data = analizar_noticia(cliente, NOTICIA)
+    assert data["meta"]["visual_apoyo"] == {"tipo": "vm_isolation"}
+    assert data["slide_1"]["title"].startswith("¿Administras VM?")
+
+
+@pytest.mark.parametrize("evidencia", ["Invented guest to host escape", "Acme VPN flaw exploited in the wild", ""])
+def test_visual_sin_evidencia_se_reintenta_sin_dibujar(monkeypatch, evidencia):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    cliente = ClienteFalso([analisis_valido(visual_tipo="vm_isolation", visual_evidencia=evidencia), analisis_valido()])
+    assert "visual_apoyo" not in analizar_noticia(cliente, NOTICIA)["meta"]
+    assert "cita literal" in cliente.llamadas[1]
+
+
+def test_medida_jailer_se_rechaza_en_clara(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    cliente = ClienteFalso([analisis_valido(mitigacion=["Implementa jailers", "Revisa el aviso", "Consulta al proveedor"]), analisis_valido()])
+    analizar_noticia(cliente, NOTICIA)
+    assert "sin recomendar jailers" in cliente.llamadas[1]
+
+
+def test_clasica_no_incorpora_diagrama_ni_exige_evidencia(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clasica")
+    cliente = ClienteFalso([analisis_valido(visual_tipo="vm_isolation", visual_evidencia="")])
+    assert "visual_apoyo" not in analizar_noticia(cliente, NOTICIA)["meta"]
+
+
+def test_fuente_insuficiente_no_llama_a_ia(monkeypatch):
+    monkeypatch.setattr(analizador, "obtener_texto_fuente", OBTENER_TEXTO_REAL)
+    cliente = ClienteFalso([])
+    with pytest.raises(ErrorAnalisis, match="Fuente insuficiente"):
+        analizar_noticia(cliente, {"title": "Guest-to-Host VM escape", "summary": "", "link": ""})
+    assert cliente.llamadas == []
+
+
+def test_resumen_suficiente_conserva_fallback():
+    assert " ".join(TEXTO_FUENTE.split()) in OBTENER_TEXTO_REAL({"title": "Aviso", "summary": TEXTO_FUENTE, "link": ""})
+
+
+def test_evidencia_breaking_out_es_valida(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    evidencia = "The researcher reached administrator control of a host, breaking out of the virtual machine."
+    a = AnalisisIA.model_validate_json(analisis_valido(visual_tipo="vm_isolation", visual_evidencia=evidencia))
+    assert analizador.verificar_contra_fuente(a, TEXTO_FUENTE + evidencia) == []
+
+
+def test_vm_sin_explotacion_activa_no_es_critical(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    a = AnalisisIA.model_validate_json(analisis_valido(visual_tipo="vm_isolation", estado_explotacion="desconocido"))
+    assert any("acceso previo" in error for error in analizador.verificar_contra_fuente(a, TEXTO_FUENTE))
+
+
+def test_no_recomienda_virtualizacion_anidada_sin_evidencia(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    a = AnalisisIA.model_validate_json(analisis_valido(mitigacion=["Deshabilita la virtualización anidada", "Revisa el aviso", "Consulta al proveedor"]))
+    assert any("virtualización anidada" in error for error in analizador.verificar_contra_fuente(a, TEXTO_FUENTE))
+
+
+def test_ficha_vm_corrige_estilo_y_medidas_sin_depender_de_ia(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    fuente = TEXTO_FUENTE + " The researcher reached administrator control of a host, breaking out of the virtual machine."
+    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: fuente)
+    cliente = ClienteFalso([analisis_valido(estado_explotacion="desconocido", mitigacion=["Implementa jailers", "a", "b"])])
+    data = analizar_noticia(cliente, NOTICIA)
+    assert len(cliente.llamadas) == 1
+    assert data["meta"]["severidad"] == "high"
+    assert data["meta"]["visual_apoyo"]["tipo"] == "vm_isolation"
+    assert "proveedor" in data["slide_2"]["description"]
+    assert all("jailer" not in p for p in data["slide_5"]["points"])
+
+
+def test_negacion_o_titulo_solo_no_activa_ficha_vm():
+    a = AnalisisIA.model_validate_json(analisis_valido())
+    assert analizador.preparar_alerta_clara(a, "Guest to host VM escape\n\nAn unrelated story.") is a
+    assert not analizador.evidencia_aislamiento_valida("The guest cannot escape to the host.", "The guest cannot escape to the host.")

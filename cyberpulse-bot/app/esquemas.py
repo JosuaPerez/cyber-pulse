@@ -55,9 +55,9 @@ class SlideTip(BaseModel):
 
 
 class AnalisisIA(BaseModel):
-    """Todos los campos son obligatorios (sin valores por defecto) para que el
-    esquema sea compatible con la salida estructurada de Gemini. Si la noticia
-    no es relevante, el modelo deja textos vacíos y listas vacías."""
+    """Los campos editoriales son obligatorios. Los enriquecimientos opcionales
+    conservan compatibilidad con análisis anteriores. Si la noticia no es
+    relevante, el modelo deja textos vacíos y listas vacías."""
 
     es_relevante: bool
     motivo_descarte: str
@@ -70,6 +70,8 @@ class AnalisisIA(BaseModel):
     dato_tecnico: str
     riesgos: list[str]
     mitigacion: list[str]
+    visual_tipo: Literal["none", "vm_isolation"] = "none"
+    visual_evidencia: str = ""
     items: list["ItemCheatsheet"] | None = None
     items_checklist: list["ItemChecklist"] | None = None
     tip_slides: list["SlideTip"] | None = None
