@@ -108,6 +108,21 @@ revisión es preferible a declarar todo el contenido automáticamente publicable
 
 ## Exportación manual revisada
 
+### Barreras de la etapa de revisión
+
+El caption automático se reconstruye con el periodo, el hecho documentado y el
+límite de la ficha. No reutiliza el caption libre del modelo; este sigue guardado
+en el borrador. Los casos históricos no pueden afirmar actividad actual en el
+hecho, resumen o detalle mediante las expresiones comprobadas por el validador.
+
+Una cita literal no basta para respaldar una medida: un filtro conservador exige
+una recomendación explícita y la misma familia de control en cita y acción
+(bloqueadores de anuncios, actualización, copias de seguridad, multifactor o ayuda
+especializada). Las citas con negaciones y los controles desconocidos se rechazan;
+el modelo debe reintentar o usar una consulta prudente. Esto puede rechazar buenas
+recomendaciones y no demuestra equivalencia semántica completa, productos, versiones
+ni aplicabilidad. Se mantiene DRY_RUN y la revisión humana antes de habilitar Meta.
+
 Una revisión humana se guarda como datos en `cyberpulse-bot/content/alerts/reviews/`;
 no agrega excepciones por noticia al generador automático. Con las plantillas
 activas, desde `cyberpulse-bot`:
