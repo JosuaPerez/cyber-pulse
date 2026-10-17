@@ -2,7 +2,7 @@ import './daily-alert.css';
 import './alert-series-preview.css';
 import './alert-support-visual.css';
 import { AboutFirefoxMockup, ReleaseVisual, ScopeVisual, IsolationVisual, IsolationScope } from './AlertSupportVisual';
-import { readSupportVisual, readEditorial } from './alert-support-data';
+import { readSupportVisual, readEditorial, editorialLabels } from './alert-support-data';
 import EditorialVisual from './EditorialVisual';
 
 const sections = { cover: 'LO ESENCIAL', scope: '¿TE AFECTA?', context_risks: 'CONTEXTO Y FUENTE', problem: 'QUÉ PASÓ', detail: 'BAJO LA LUPA', impact: 'QUÉ ESTÁ EN RIESGO', mitigation: 'QUÉ HACER' };
@@ -40,29 +40,30 @@ export default function DailyAlert({ type, level, title, description, summary = 
   const editorial = compact ? readEditorial(editorialData) : null;
   const firefox = !editorial && visual?.tipo === 'firefox_version';
   const isolation = !editorial && visual?.tipo === 'vm_isolation';
-  const temporal = editorial?.temporalidad === 'historica' ? 'Hechos pasados documentados; actividad actual no confirmada.' : 'Vigencia actual sin confirmar: consulta el contexto de la fuente.';
+  const labels = editorialLabels(editorial);
+  const temporal = labels.status;
   return <main className={`daily-alert daily-alert-${type} daily-layout-${safeLayout}${compact ? ' daily-compact' : ''}${visual ? ' daily-has-visual' : ''}${editorial ? ' daily-universal' : ''}`}>
     <header><div><svg viewBox="0 0 60 60" fill="none" aria-hidden="true"><path d="M2 30h12l8-18 13 36 8-18h15" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" /></svg><span>CyberPulse</span></div><span>{seriesLabel}</span></header>
-    <div className="daily-eyebrow"><span>{section}</span><span style={{ color: severity[1] }}>SEVERIDAD {severity[0]}</span></div>
+    <div className="daily-eyebrow"><span>{labels.policy && type === 'scope' ? '¿EN TU ORGANIZACIÓN?' : section}</span><span style={{ color: severity[1] }}>{labels.context || `SEVERIDAD ${severity[0]}`}</span></div>
     <h1><Text>{title}</Text></h1>
     <div className="daily-content">
       {type === 'cover' ? <>
-        <article className="daily-paper"><div className="daily-paper-label"><span>RESUMEN DEL AVISO</span><span aria-hidden="true">↗</span></div><p><Text>{description}</Text></p><small>{editorial ? temporal : status}</small></article>
-        {editorial && <EditorialVisual visual={visual} summary={description} />}
+        <article className="daily-paper"><div className="daily-paper-label"><span>{labels.policy ? 'RIESGO Y CONTEXTO' : 'RESUMEN DEL AVISO'}</span><span aria-hidden="true">↗</span></div><p><Text>{description}</Text></p><small>{editorial ? temporal : status}</small></article>
+        {editorial && <EditorialVisual visual={visual} summary={description} policy={labels.policy} />}
         {firefox && <ReleaseVisual version={visual.version} />}
         {isolation && <IsolationVisual />}
         {coverVisual || (safeLayout === 'update' ? <p className="daily-next-step">Primero revisa si te afecta.<br /><strong>Las medidas están en la diapositiva {totalSlides}.</strong></p> : <><div className="daily-guide"><div><b>01</b><span>Entiende<br />lo que pasó</span></div><div><b>02</b><span>Revisa<br />si te afecta</span></div><div><b>03</b><span>Aplica<br />las medidas</span></div></div><p className="daily-prompt">La noticia, su contexto y qué puedes hacer.</p></>)}
       </> : type === 'scope' ? <>
-        <article className="daily-paper"><div className="daily-paper-label"><span>{editorial ? 'EL HECHO DOCUMENTADO' : 'CONTEXTO Y ALCANCE REPORTADOS'}</span></div><p><Text>{description}</Text></p></article>
+        <article className="daily-paper"><div className="daily-paper-label"><span>{labels.policy ? 'LA PRÁCTICA QUE SE ANALIZA' : editorial ? 'EL HECHO DOCUMENTADO' : 'CONTEXTO Y ALCANCE REPORTADOS'}</span></div><p><Text>{description}</Text></p></article>
         {firefox && <ScopeVisual version={visual.version} />}
         {isolation && <IsolationScope />}
         {editorial && <div className="editorial-audience"><small>A QUIÉN LE SIRVE REVISARLO</small><strong>{editorial.audiencia === 'administradores' ? 'Quienes administran sistemas y redes' : editorial.audiencia === 'mixta' ? 'Personas usuarias y equipos de TI' : 'Personas que quieren protegerse'}</strong><p>{editorial.alcance || temporal}</p></div>}
-        <p className="daily-next-step">{editorial ? editorial.limite : 'Comprueba si el producto o la situación coincide con tu caso. Si falta información, consulta la fuente antes de asumir que estás afectado.'}</p>
+        <p className="daily-next-step">{editorial ? labels.scopePrompt : 'Comprueba si el producto o la situación coincide con tu caso. Si falta información, consulta la fuente antes de asumir que estás afectado.'}</p>
       </> : type === 'context_risks' ? <>
         <article className="daily-paper daily-technical"><div className="daily-paper-label"><span>DETALLE DEL ANÁLISIS</span></div><p><Text>{description}</Text></p></article>
         {!editorial && <div className="daily-context-risks"><small>RIESGOS DEL ANÁLISIS</small>{points.map((point, index) => <p key={index}><b>{index + 1}</b><span><Text>{point}</Text></span></p>)}</div>}
-        {ids.length > 0 && <p className="daily-cves">{ids.join(' · ')}</p>}
-        {editorial && <><div className="editorial-limit"><small>LO QUE NO PODEMOS CONCLUIR</small><p>{editorial.limite}</p></div><p className="editorial-reference">Para profundizar: consulta los indicadores y el análisis técnico en el informe original.</p></>}
+        {!labels.policy && ids.length > 0 && <p className="daily-cves">{ids.join(' · ')}</p>}
+        {editorial && <><div className="editorial-limit"><small>LO QUE NO PODEMOS CONCLUIR</small><p>{editorial.limite}</p></div><p className="editorial-reference">{labels.reference}</p></>}
       </> : type === 'impact' || type === 'mitigation' ? <>
         <p className="daily-intro"><Text>{description}</Text></p>
         {firefox && type === 'mitigation' && <AboutFirefoxMockup version={visual.version} />}

@@ -64,6 +64,50 @@ def test_revisa_no_permite_ocultar_control_operativo_como_orientacion_general():
     assert ajustes
 
 
+def test_riesgo_operativo_necesita_medida_respaldada_sin_rellenar_consultas():
+    e = ficha(tipo_noticia="riesgo_operativo")
+    assert any("medida concreta" in error for error in errores_editoriales(e, TEXTO_FUENTE))
+    cita = "Organizations should review their acceptable use policy."
+    e.acciones = [e.acciones[0]]
+    e.acciones[0].texto = "Revisa la política de uso de IA con tu equipo."
+    e.acciones[0].orientacion_general = False
+    e.acciones[0].evidencia = cita
+    normalizado, _ = resolver_editorial(e, {})
+    assert len(normalizado.acciones) == 1
+    assert not errores_editoriales(normalizado, TEXTO_FUENTE + ' ' + cita)
+    assert "campaña" not in normalizado.caption
+    assert "Riesgo de uso y política" in normalizado.caption
+
+
+def test_consultas_del_mismo_rol_se_agrupan_y_no_mencionan_indicadores():
+    e = ficha()
+    e.acciones.append(e.acciones[1].model_copy(update={"texto": "Revisa los logs de acceso."}))
+    normalizado, _ = resolver_editorial(e, {})
+    assert len(normalizado.acciones) == 2
+    assert all("indicadores" not in a.texto for a in normalizado.acciones)
+
+
+@pytest.mark.parametrize("aviso", ["The case is hypothetical.", "Sponsored and written by Vendor."])
+def test_escenarios_y_promociones_no_se_convierten_en_alerta_real(monkeypatch, aviso):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: TEXTO_FUENTE + aviso)
+    cliente = ClienteFalso([])
+    with pytest.raises(analizador.ErrorAnalisis, match="Revisión editorial requerida"):
+        analizador.analizar_noticia(cliente, NOTICIA)
+    assert cliente.llamadas == []
+
+
+def test_clasificacion_explicita_obligatoria_para_analisis_nuevo(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: TEXTO_FUENTE)
+    monkeypatch.setattr(analizador.time, "sleep", lambda s: None)
+    incompleto = json.loads(analisis_valido())
+    del incompleto["editorial"]["tipo_noticia"]
+    cliente = ClienteFalso([json.dumps(incompleto), analisis_valido()])
+    analizador.analizar_noticia(cliente, NOTICIA)
+    assert "tipo_noticia es obligatorio" in cliente.llamadas[1]
+
+
 def ficha(**cambios):
     data = json.loads(analisis_valido())["editorial"]
     data.update(cambios)

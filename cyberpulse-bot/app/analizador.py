@@ -110,6 +110,12 @@ ESTILO PARA ALERTAS CLARAS:
   de esa relación, sin traducir ni parafrasear. En otro caso usa none y evidencia vacía.
 - Evita introducciones de relleno, repetir el titular y frases como "bajo la lupa".
 CONTRATO UNIVERSAL (obligatorio en editorial, para TODAS las noticias):
+- tipo_noticia obligatorio: incidente (hechos de un ataque), vulnerabilidad (fallo técnico)
+  o riesgo_operativo (prácticas, políticas o comportamiento, sin incidente puntual).
+  Una noticia de cuentas personales de IA en el trabajo es riesgo_operativo, no un ataque.
+  En riesgo_operativo aporta al menos una medida concreta RECOMENDADA por la fuente;
+  políticas de uso, capacitación, herramientas aprobadas o retención son familias admitidas.
+  No presupongas que comprar un plan empresarial resuelve por sí solo el riesgo.
 - No adaptes solo casos de Firefox o máquinas virtuales. No dependas de visual_tipo: usa none.
 - editorial.gancho y resumen: una situación reconocible, no una lista de siglas ni titulares alarmistas.
 - audiencia: general, administradores o mixta. alcance: a quién concierne el hallazgo; separa
@@ -121,7 +127,7 @@ CONTRATO UNIVERSAL (obligatorio en editorial, para TODAS las noticias):
   En otro caso vigencia_no_confirmada. Un informe nuevo NO demuestra una campaña activa hoy.
 - detalle: explicación comprensible, sin hashes, dominios, IOC, C2, screening, payload ni logs.
   Conserva los indicadores completos solo en dato_tecnico, que irá al recurso técnico.
-- acciones: 2–3 instrucciones cortas; rol personas o administradores. Incluye al menos una
+- acciones: 1–3 instrucciones cortas, sin rellenar con consultas repetidas; rol personas o administradores. Incluye al menos una
   acción para personas sin permisos de red. No conviertas diagramas en reglas de detección.
   orientacion_general=true solo para orientación prudente (consultar fuente/proveedor/equipo de
   seguridad, comprobar aplicabilidad). Las medidas específicas necesitan evidencia literal.
@@ -257,6 +263,11 @@ def analizar_noticia(client, noticia: dict, modelo: str = MODELO) -> dict:
     Lanza NoticiaDescartada si no es publicable y ErrorAnalisis si no se logró
     un análisis válido tras MAX_INTENTOS."""
     texto = obtener_texto_fuente(noticia)
+    if app_config.ALERTAS_VARIANTE == "clara" and re.search(
+            r"the case is hypothetical|this is a hypothetical (?:case|scenario)|"
+            r"(?:el caso|este escenario) es hipotético|sponsored and written by|contenido patrocinado",
+            texto, re.IGNORECASE):
+        raise ErrorAnalisis("Revisión editorial requerida: la fuente declara un caso hipotético o contenido patrocinado; no generar una alerta real automáticamente")
     fragmentos = fragmentos_fuente(texto)
     url = noticia.get("link", "")
     contenido = f'<fuente url="{url}">\n{texto.replace("</fuente>", "")}\n</fuente>'
@@ -285,6 +296,8 @@ def analizar_noticia(client, noticia: dict, modelo: str = MODELO) -> dict:
             if app_config.ALERTAS_VARIANTE == "clara":
                 if analisis.editorial is None:
                     raise ValueError("Falta editorial: completa el contrato universal de alertas claras")
+                if "tipo_noticia" not in analisis.editorial.model_fields_set:
+                    raise ValueError("editorial.tipo_noticia es obligatorio: clasifica el caso antes de redactarlo")
                 borrador_editorial = analisis.editorial.model_dump()
                 editorial, ajustes = resolver_editorial(analisis.editorial, fragmentos)
                 analisis.editorial = editorial

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readSupportVisual, readEditorial } from '../src/alert-support-data.js';
+import { readSupportVisual, readEditorial, editorialLabels } from '../src/alert-support-data.js';
 
 const source = 'https://www.mozilla.org/en-US/security/advisories/mfsa2026-106/';
 const visual = JSON.stringify({ tipo: 'firefox_version', version: '158' });
@@ -36,4 +36,23 @@ test('datos editoriales admiten solo audiencias y temporalidad conocidas', () =>
   assert.equal(readEditorial('{'), null);
   assert.equal(readEditorial('{}'), null);
   assert.equal(readEditorial(JSON.stringify({ ...e, temporalidad: 'activa_ahora' })), null);
+});
+
+test('riesgo operativo tiene marco organizativo, sin severidad ni falsa vigencia de ataque', () => {
+  const e = readEditorial(JSON.stringify({ tipo_noticia: 'riesgo_operativo', audiencia: 'mixta', temporalidad: 'vigencia_no_confirmada', limite: 'No demuestra una brecha en tu organización.' }));
+  const labels = editorialLabels(e);
+  assert.equal(labels.policy, true);
+  assert.equal(labels.context, 'RIESGO OPERATIVO');
+  assert.ok(!labels.status.includes('Vigencia'));
+  assert.ok(!labels.reference.includes('indicadores'));
+  assert.notEqual(labels.scopePrompt, e.limite);
+  assert.equal(readEditorial(JSON.stringify({ ...e, tipo_noticia: 'arbitrario' })), null);
+});
+
+test('fichas anteriores conservan marco de incidente y el límite no se duplica en alcance', () => {
+  const e = readEditorial(JSON.stringify({ audiencia: 'general', temporalidad: 'historica', limite: 'No demuestra una brecha en tu organización.' }));
+  assert.equal(e.tipo_noticia, 'incidente');
+  assert.equal(editorialLabels(e).context, null);
+  assert.ok(editorialLabels(e).status.includes('pasados'));
+  assert.notEqual(editorialLabels(e).scopePrompt, e.limite);
 });
