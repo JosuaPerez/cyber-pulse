@@ -52,6 +52,7 @@ def analisis_valido(**cambios):
         "hilo_x": ["Se explota una RCE en Acme VPN Gateway #InfoSec", "CVE-2026-12345 (CVSS 9.8) permite ejecución remota sin autenticación.",
                    "Actualiza a 5.2.1 y restringe la interfaz de administración."],
         "editorial": {
+            "tipo_noticia": "vulnerabilidad",
             "gancho": "¿Usas Acme VPN? Revisa este aviso", "resumen": "El aviso describe un fallo que permite acceder al equipo sin credenciales.",
             "audiencia": "mixta", "hecho": "La fuente documenta explotación de Acme VPN Gateway.", "alcance": "Concierne a quienes usan o administran Acme VPN Gateway. Consulta el aviso para comprobar tu caso.",
             "limite": "Esta noticia no demuestra que tu equipo esté comprometido.",

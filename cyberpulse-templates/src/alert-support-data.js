@@ -25,7 +25,23 @@ export function readEditorial(value) {
     if (!e || !['general', 'administradores', 'mixta'].includes(e.audiencia) ||
         !['historica', 'vigencia_no_confirmada'].includes(e.temporalidad) ||
         typeof e.limite !== 'string' || e.limite.length < 15 || e.limite.length > 100) return null;
-    return { audiencia: e.audiencia, temporalidad: e.temporalidad, limite: e.limite,
+    const tipo = e.tipo_noticia ?? 'incidente';
+    if (!['incidente', 'vulnerabilidad', 'riesgo_operativo'].includes(tipo)) return null;
+    return { tipo_noticia: tipo, audiencia: e.audiencia, temporalidad: e.temporalidad, limite: e.limite,
       alcance: typeof e.alcance === 'string' && e.alcance.length <= 240 ? e.alcance : '' };
   } catch { return null; }
+}
+
+export function editorialLabels(e) {
+  const policy = e?.tipo_noticia === 'riesgo_operativo';
+  return {
+    policy,
+    context: policy ? 'RIESGO OPERATIVO' : null,
+    status: policy ? 'Prácticas y políticas de uso; no confirma una brecha en tu organización.' :
+      e?.temporalidad === 'historica' ? 'Hechos pasados documentados; actividad actual no confirmada.' :
+        'Vigencia actual sin confirmar: consulta el contexto de la fuente.',
+    scopePrompt: policy ? 'Identifica qué personas, herramientas y políticas intervienen en tu organización.' :
+      'Comprueba las condiciones del caso antes de asumir que estás afectado.',
+    reference: 'Consulta el informe original para conocer el contexto y sus límites.',
+  };
 }

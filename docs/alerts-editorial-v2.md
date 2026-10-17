@@ -108,6 +108,36 @@ revisión es preferible a declarar todo el contenido automáticamente publicable
 
 ## Exportación manual revisada
 
+### Adaptación por naturaleza del contenido
+
+Los análisis nuevos deben declarar `tipo_noticia`: `incidente`, `vulnerabilidad`
+o `riesgo_operativo`. El valor predeterminado de incidente solo conserva la
+lectura de fichas antiguas; el analizador rechaza nuevas respuestas sin el campo.
+La clasificación depende del modelo y todavía requiere revisión editorial.
+
+Riesgo operativo usa marco de personas, herramientas y políticas, no «tu
+dispositivo» ni comparación con una infección. La etiqueta es «RIESGO OPERATIVO»,
+no una severidad de vulnerabilidad. Caption y estado no hablan de una campaña
+activa. El límite aparece una sola vez, en la diapositiva 3; la 2 termina con una
+comprobación de alcance. La referencia al informe no promete indicadores que no
+se han comprobado. El cierre se distribuye verticalmente para no acumular vacío
+debajo del CTA.
+
+Se admiten de una a tres acciones, sin completar un mínimo artificial ni repetir
+consultas por público. Políticas de uso, capacitación, herramientas aprobadas y
+retención de datos son familias adicionales del filtro conservador, no medidas
+autorizadas por defecto. Un riesgo operativo sin una acción específica respaldada
+se rechaza para reintento/revisión; no se sustituye su valor por tres consultas.
+
+Si el texto extraído declara expresamente un caso hipotético o contiene las marcas
+de patrocinio comprobadas por el filtro, se detiene antes de la IA con
+`ErrorAnalisis` y sigue el circuito existente de fallo/revisión. La detección es
+textual y parcial: no garantiza reconocer todo patrocinio ni todos los escenarios.
+El artículo de cuentas personales de IA que originó la revisión declara un caso
+hipotético y está patrocinado; no se usa como incidente confirmado.
+`demo_editorial_universal` incluye una prueba ficticia de riesgo operativo, rotulada
+como demostración, además de los casos técnicos y sus pruebas de longitud máxima.
+
 ### Barreras de la etapa de revisión
 
 El caption automático se reconstruye con el periodo, el hecho documentado y el

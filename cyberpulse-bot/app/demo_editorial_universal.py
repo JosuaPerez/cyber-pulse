@@ -29,6 +29,14 @@ def muestra(tema, clase, stress=False):
     if clase != "resumen":
         labels = ["Contenido inicial", "Selección del objetivo", "Posible impacto"] if clase == "cadena" else ["Aviso publicado", "Entorno por comprobar"]
         e["nodos"] = [{"texto": label, "evidencia": "Demostración ficticia del contrato común."} for label in labels]
+    if tema == "riesgo-operativo":
+        e.update(tipo_noticia="riesgo_operativo", gancho="¿Qué IA usa tu equipo para trabajar?",
+                 resumen="Ejemplo ficticio: revisar cuentas, herramientas y políticas de uso de IA en el trabajo.",
+                 hecho="Se ilustra una práctica de trabajo, no una brecha ni un incidente confirmado.",
+                 alcance="Sirve para revisar qué cuentas y herramientas usa el equipo y qué reglas se aplican a la información de trabajo.",
+                 detalle="El ejemplo organiza la revisión en personas, herramientas y políticas. No evalúa a ninguna empresa ni recomienda un producto.",
+                 limite="Es una demostración ficticia, no evidencia de exposición de datos.",
+                 acciones=[{"rol": "personas", "texto": "Comprueba con tu equipo qué herramientas están aprobadas para el trabajo.", "orientacion_general": False, "evidencia": "Demostración ficticia, no recomendación de una noticia."}])
     if stress:
         for key, length in [("gancho", 50), ("resumen", 110), ("hecho", 110), ("alcance", 240), ("limite", 100), ("detalle", 180)]:
             e[key] = ("Texto largo de prueba " * 20)[:length]
@@ -44,10 +52,13 @@ def muestra(tema, clase, stress=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stress", action="store_true")
+    parser.add_argument("--tema", choices=["aviso", "incidente", "ataque", "riesgo-operativo"])
     args = parser.parse_args()
     original = config.IMAGENES_DIR
     try:
-        for tema, clase in [("aviso", "resumen"), ("incidente", "comparacion"), ("ataque", "cadena")]:
+        for tema, clase in [("aviso", "resumen"), ("incidente", "comparacion"), ("ataque", "cadena"), ("riesgo-operativo", "resumen")]:
+            if args.tema and tema != args.tema:
+                continue
             output = ROOT / "media/editorial-universal" / (tema + ("-limites" if args.stress else ""))
             config.IMAGENES_DIR = output
             paths = generar_imagenes_carrusel(muestra(tema, clase, args.stress), variante_alerta="clara")

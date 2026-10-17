@@ -33,6 +33,8 @@ class NodoEditorial(BaseModel):
 
 
 class EditorialAlerta(BaseModel):
+    # Valor por compatibilidad con fichas guardadas; el analizador nuevo lo exige explícito.
+    tipo_noticia: Literal["incidente", "vulnerabilidad", "riesgo_operativo"] = "incidente"
     gancho: str = Field(min_length=8, max_length=50)
     resumen: str = Field(min_length=15, max_length=110)
     audiencia: Literal["general", "administradores", "mixta"]
@@ -42,7 +44,7 @@ class EditorialAlerta(BaseModel):
     temporalidad: Literal["historica", "vigencia_no_confirmada"]
     evidencia_temporal: str = Field(max_length=300)
     detalle: str = Field(min_length=15, max_length=180)
-    acciones: list[AccionEditorial] = Field(min_length=2, max_length=3)
+    acciones: list[AccionEditorial] = Field(min_length=1, max_length=3)
     caption: str = Field(min_length=30, max_length=500)
     evidencias: list[str] = Field(min_length=1, max_length=4)
     visual: Literal["resumen", "cadena", "comparacion"]
@@ -64,6 +66,10 @@ CONTROLES = (
     r"copia\w* de seguridad|respald\w*|backups?",
     r"autenticación multifactor|doble factor|multifactor|two[- ]factor|\bMFA\b",
     r"ayuda especializada|expert help|specialist support",
+    r"política\w* de uso|acceptable[- ]use polic\w*|usage polic\w*",
+    r"capacit\w*|formación|train\w*|educat\w*",
+    r"herramientas? aprobad\w*|approved (?:AI )?tools?",
+    r"retención de datos|data retention",
 )
 RECOMENDACION = re.compile(
     r"\b(recommend\w*|should|must|advis\w*|urge\w*|use|install|enable|apply|"
@@ -77,7 +83,7 @@ CONSULTAS_ADICIONALES = {
     "Revisa las medidas del aviso oficial y verifica su aplicación.",
     "Consulta la fuente o al proveedor para comprobar si esta noticia te afecta.",
     "Verifica qué información falta antes de asumir que tu equipo está afectado.",
-    "Consulta el informe con tu equipo de seguridad antes de aplicar sus indicadores.",
+    "Consulta el informe con tu equipo de seguridad para comprobar qué medidas son aplicables.",
 }
 
 
@@ -93,6 +99,8 @@ def respaldo_accion(texto: str, evidencia: str) -> bool:
 
 
 def caption_temporal(e: EditorialAlerta) -> str:
+    if e.tipo_noticia == "riesgo_operativo":
+        return f"Riesgo de uso y política, no confirmación de una brecha. {e.hecho} {e.limite} ¿Qué práctica revisarás con tu equipo?"
     periodo = ("Hechos históricos documentados; actividad actual no confirmada."
                if e.temporalidad == "historica" else
                "Según el informe; la vigencia actual no está confirmada.")
@@ -134,7 +142,7 @@ def resolver_editorial(e: EditorialAlerta, fragmentos: dict[str, str]) -> tuple[
     for accion in data["acciones"]:
         accion["evidencia"] = fragmentos.get(accion["evidencia"], accion["evidencia"])
         if INDICADOR.search(accion["texto"]) or re.search(r"\b(logs?|IOC|C2|screening|SHA-?256)\b", accion["texto"], re.IGNORECASE):
-            accion.update(texto="Consulta el informe con tu equipo de seguridad antes de aplicar sus indicadores.", orientacion_general=True, evidencia="")
+            accion.update(texto="Consulta el informe con tu equipo de seguridad para comprobar qué medidas son aplicables.", orientacion_general=True, evidencia="")
             ajustes.append("Una tarea técnica se remitió al informe en lugar de presentarla como guía general.")
         accion["texto"] = texto_claro(accion["texto"])
         if accion["orientacion_general"] and accion["texto"] not in {
@@ -151,6 +159,10 @@ def resolver_editorial(e: EditorialAlerta, fragmentos: dict[str, str]) -> tuple[
     # Evita repetir consultas idénticas después de remitir tareas técnicas.
     unicas = []
     for accion in data["acciones"]:
+        if accion["orientacion_general"] and any(
+                a["orientacion_general"] and a["rol"] == accion["rol"] for a in unicas):
+            ajustes.append("Consultas del mismo público agrupadas; no se rellenan tarjetas repetidas.")
+            continue
         if not any((a["rol"], a["texto"].casefold()) == (accion["rol"], accion["texto"].casefold()) for a in unicas):
             unicas.append(accion)
     data["acciones"] = unicas
@@ -158,10 +170,6 @@ def resolver_editorial(e: EditorialAlerta, fragmentos: dict[str, str]) -> tuple[
         data["acciones"] = [{"rol": "personas", "texto": "Consulta la fuente o al proveedor para comprobar si esta noticia te afecta.",
                              "orientacion_general": True, "evidencia": ""}, *data["acciones"][:2]]
         ajustes.append("Se añadió orientación para personas; otras medidas siguen en el borrador técnico.")
-    if len(data["acciones"]) < 2:
-        data["acciones"].append({"rol": "personas", "texto": "Verifica qué información falta antes de asumir que tu equipo está afectado.",
-                                "orientacion_general": True, "evidencia": ""})
-        ajustes.append("Consultas duplicadas se agruparon y se añadió comprobación de incertidumbre.")
     # La llamada a la acción pública comienza por la persona, no por un permiso de administración.
     data["acciones"].sort(key=lambda a: a["rol"] != "personas")
     return EditorialAlerta.model_validate(data), ajustes
@@ -169,6 +177,8 @@ def resolver_editorial(e: EditorialAlerta, fragmentos: dict[str, str]) -> tuple[
 
 def errores_editoriales(e: EditorialAlerta, fuente: str) -> list[str]:
     errores = []
+    if e.tipo_noticia == "riesgo_operativo" and not any(not a.orientacion_general for a in e.acciones):
+        errores.append("editorial: riesgo operativo necesita al menos una medida concreta respaldada; no rellenes con consultas. Si falta respaldo, requiere revisión")
     if any(not cita_presente(cita, fuente) for cita in e.evidencias):
         errores.append("editorial.evidencias: aporta citas literales de la fuente, de 10–300 caracteres")
     if e.temporalidad == "historica" and not cita_presente(e.evidencia_temporal, fuente):
