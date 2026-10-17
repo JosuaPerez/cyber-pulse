@@ -125,6 +125,10 @@ CONTRATO UNIVERSAL (obligatorio en editorial, para TODAS las noticias):
   acción para personas sin permisos de red. No conviertas diagramas en reglas de detección.
   orientacion_general=true solo para orientación prudente (consultar fuente/proveedor/equipo de
   seguridad, comprobar aplicabilidad). Las medidas específicas necesitan evidencia literal.
+  La cita debe RECOMENDAR ese mismo control, no solo describir cómo ataca el malware.
+  Controles admitidos para comprobación conservadora: bloqueadores de anuncios, actualizar,
+  copias de seguridad, multifactor y ayuda especializada. Si no hay recomendación explícita
+  o el control no encaja, usa una consulta prudente; no inventes ni fuerces una cita.
   No presentes filtrado, bloqueo o actualización como protección absoluta.
 - editorial.caption: accesible, coherente con alcance y periodo, termina con una pregunta.
 - Apunta a menos del 85% de cada límite del esquema. No incluyas prefijos de rol en texto:

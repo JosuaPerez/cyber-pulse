@@ -8,6 +8,53 @@ from test_analizador import analisis_valido, TEXTO_FUENTE, ClienteFalso, NOTICIA
 from app import analizador
 
 
+@pytest.mark.parametrize("periodo", ["historica", "vigencia_no_confirmada"])
+def test_caption_libre_no_contradice_temporalidad(periodo):
+    e = ficha(temporalidad=periodo, caption="La campaña está siendo utilizada ahora para infectarte. ¿Estás listo?")
+    normalizado, ajustes = resolver_editorial(e, {})
+    assert "está siendo" not in normalizado.caption
+    assert "actual" in normalizado.caption and "confirmada" in normalizado.caption
+    assert normalizado.hecho in normalizado.caption
+    assert normalizado.limite in normalizado.caption
+    assert ajustes
+
+
+@pytest.mark.parametrize("cita,admitida", [
+    ('The company embedded JavaScript in ads to profile devices.', False),
+    ('Researchers recommend using a trusted ad-blocking extension.', True),
+    ('Researchers do not recommend using an ad-blocking extension.', False),
+    ('Researchers recommend installing updates to affected devices.', False),
+    ('Researchers recommend installing updates. The attack bypasses ad-blocking extensions.', False),
+])
+def test_cita_de_ataque_negada_o_control_distinto_no_respalda_medida(cita, admitida):
+    e = ficha()
+    e.acciones[0].texto = "Instala un bloqueador de anuncios confiable."
+    e.acciones[0].orientacion_general = False
+    e.acciones[0].evidencia = cita
+    errores = errores_editoriales(e, TEXTO_FUENTE + ' ' + cita)
+    assert (not any('mismo control' in error for error in errores)) == admitida
+
+
+def test_historico_rechaza_hecho_redactado_como_actividad_actual():
+    e = ficha(temporalidad="historica", evidencia_temporal="Attacks occurred in 2024.",
+              hecho="La campaña está siendo utilizada para atacar dispositivos.")
+    assert any("actividad actual" in error for error in errores_editoriales(e, TEXTO_FUENTE + " Attacks occurred in 2024."))
+
+
+def test_analizador_reintenta_medida_con_cita_que_solo_describe_ataque(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    cita = "The company embedded JavaScript in ads to profile devices."
+    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: TEXTO_FUENTE + ' ' + cita)
+    malo = json.loads(analisis_valido())
+    malo["editorial"]["acciones"][0].update(
+        texto="Instala un bloqueador de anuncios confiable.", orientacion_general=False, evidencia=cita)
+    cliente = ClienteFalso([json.dumps(malo), analisis_valido()])
+    resultado = analizador.analizar_noticia(cliente, NOTICIA)
+    assert "mismo control" in cliente.llamadas[1]
+    assert resultado["meta"]["editorial"]["acciones"][0]["orientacion_general"]
+    assert "vigencia actual no está confirmada" in resultado["caption"]
+
+
 def ficha(**cambios):
     data = json.loads(analisis_valido())["editorial"]
     data.update(cambios)
@@ -67,7 +114,7 @@ def test_ids_se_resuelven_contra_la_fuente_y_desconocidos_se_rechazan():
     e, ajustes = resolver_editorial(ficha(evidencias=["FUENTE_001"]), fragmentos)
     assert e.evidencias == [fragmentos["FUENTE_001"]]
     assert not errores_editoriales(e, TEXTO_FUENTE)
-    assert ajustes == []
+    assert any("Caption reconstruido" in ajuste for ajuste in ajustes)
     e, _ = resolver_editorial(ficha(evidencias=["FUENTE_999"]), fragmentos)
     assert errores_editoriales(e, TEXTO_FUENTE)
 

@@ -56,6 +56,39 @@ def cita_presente(cita: str, fuente: str) -> bool:
     return 10 <= len(cita.strip()) <= 300 and normalizar(cita) in normalizar(fuente)
 
 
+# Filtro conservador, no una prueba de implicación semántica. Controles desconocidos
+# quedan para revisión; mencionar un ataque no respalda una recomendación.
+CONTROLES = (
+    r"bloqueador\w*.*(?:anuncio|publicidad)|ad[- ]?block\w*",
+    r"actualiz\w*|parche\w*|updat\w*|patch\w*",
+    r"copia\w* de seguridad|respald\w*|backups?",
+    r"autenticación multifactor|doble factor|multifactor|two[- ]factor|\bMFA\b",
+    r"ayuda especializada|expert help|specialist support",
+)
+RECOMENDACION = re.compile(
+    r"\b(recommend\w*|should|must|advis\w*|urge\w*|use|install|enable|apply|"
+    r"recomienda\w*|debe\w*|aconseja\w*|usa|instala|activa|aplica)\b", re.IGNORECASE)
+NEGACION = re.compile(r"\b(not|never|without|cannot|no|nunca|sin)\b|n't\b", re.IGNORECASE)
+
+
+def respaldo_accion(texto: str, evidencia: str) -> bool:
+    """Solo admite familias conocidas con recomendación explícita, sin negación."""
+    if NEGACION.search(evidencia) or not RECOMENDACION.search(evidencia):
+        return False
+    controles = [p for p in CONTROLES if re.search(p, texto, re.IGNORECASE)]
+    frases = re.split(r"(?<=[.!?;])\s+|\n+", evidencia)
+    return bool(controles) and all(
+        any(RECOMENDACION.search(frase) and re.search(p, frase, re.IGNORECASE) for frase in frases)
+        for p in controles)
+
+
+def caption_temporal(e: EditorialAlerta) -> str:
+    periodo = ("Hechos históricos documentados; actividad actual no confirmada."
+               if e.temporalidad == "historica" else
+               "Según el informe; la vigencia actual no está confirmada.")
+    return f"{periodo} {e.hecho} {e.limite} ¿Qué necesitas comprobar en tu caso?"
+
+
 def fragmentos_fuente(fuente: str) -> dict[str, str]:
     partes = []
     for frase in re.split(r"(?<=[.!?])\s+|\n+", fuente):
@@ -103,9 +136,11 @@ def resolver_editorial(e: EditorialAlerta, fragmentos: dict[str, str]) -> tuple[
                                "Consulta la fuente o pide ayuda al proveedor antes de asumir que estás afectado.")
             accion["evidencia"] = ""
             ajustes.append("Una orientación general se sustituyó por consulta prudente; revisar su utilidad.")
-    if re.search(r"\b(registros|red de tu organización|firewalls?|indicadores)\b", data["caption"], re.IGNORECASE):
-        data["caption"] = f"{data['resumen']} {data['limite']} ¿Qué necesitas comprobar en tu caso?"
-        ajustes.append("El caption operativo se sustituyó por resumen, límite y pregunta accesible.")
+    # El caption público no reutiliza una redacción libre que pueda contradecir
+    # la temporalidad del carrusel. El original permanece en borrador_editorial.
+    data["caption"] = caption_temporal(EditorialAlerta.model_validate(data))
+    if data["caption"] != e.caption:
+        ajustes.append("Caption reconstruido con temporalidad, hecho documentado y límite; revisar.")
     # Evita repetir consultas idénticas después de remitir tareas técnicas.
     unicas = []
     for accion in data["acciones"]:
@@ -140,6 +175,12 @@ def errores_editoriales(e: EditorialAlerta, fuente: str) -> list[str]:
             errores.append("editorial.acciones: orientación general debe empezar por Consulta, Revisa, Comprueba o Verifica; no uses prefijos de rol en texto")
         if not accion.orientacion_general and not cita_presente(accion.evidencia, fuente):
             errores.append("editorial: una medida específica requiere evidencia literal; si no puedes citarla, usa orientación general como consultar el aviso o pedir ayuda al proveedor")
+        elif not accion.orientacion_general and not respaldo_accion(accion.texto, accion.evidencia):
+            errores.append("editorial: la cita de la medida debe recomendar explícitamente el mismo control; una descripción del ataque no basta. Usa orientación de consulta si no hay respaldo verificable")
+    if e.temporalidad == "historica" and re.search(
+            r"\b(?:actualmente|hoy|sigue[n]? activ[ao]s?|está[n]? siendo|está[n]? explotando)\b",
+            " ".join([e.hecho, e.resumen, e.detalle]), re.IGNORECASE):
+        errores.append("editorial: un caso histórico no debe afirmar actividad actual en hecho, resumen o detalle")
     visible = " ".join([e.gancho, e.resumen, e.hecho, e.alcance, e.limite, e.detalle, e.caption,
                         *(a.texto for a in e.acciones), *(n.texto for n in e.nodos)])
     if re.search(r"\b[0-9a-f]{32,64}\b|\[\.\]|\b(?:\d{1,3}\.){3}\d{1,3}\b|\b(?:[a-z0-9-]+\.)+(?:com|net|org|io|xyz|ru|cn|info)\b", visible, re.IGNORECASE):
