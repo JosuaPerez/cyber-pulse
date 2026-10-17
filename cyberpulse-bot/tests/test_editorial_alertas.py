@@ -55,6 +55,15 @@ def test_analizador_reintenta_medida_con_cita_que_solo_describe_ataque(monkeypat
     assert "vigencia actual no está confirmada" in resultado["caption"]
 
 
+def test_revisa_no_permite_ocultar_control_operativo_como_orientacion_general():
+    e = ficha()
+    e.acciones[1].texto = "Revisa el tráfico hacia dominios de publicidad sospechosos."
+    normalizado, ajustes = resolver_editorial(e, {})
+    assert "tráfico" not in normalizado.acciones[1].texto
+    assert normalizado.acciones[1].texto.startswith("Consulta el aviso")
+    assert ajustes
+
+
 def ficha(**cambios):
     data = json.loads(analisis_valido())["editorial"]
     data.update(cambios)

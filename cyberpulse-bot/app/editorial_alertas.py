@@ -69,6 +69,16 @@ RECOMENDACION = re.compile(
     r"\b(recommend\w*|should|must|advis\w*|urge\w*|use|install|enable|apply|"
     r"recomienda\w*|debe\w*|aconseja\w*|usa|instala|activa|aplica)\b", re.IGNORECASE)
 NEGACION = re.compile(r"\b(not|never|without|cannot|no|nunca|sin)\b|n't\b", re.IGNORECASE)
+CONSULTAS = {
+    "administradores": "Consulta el aviso y verifica con tu equipo qué medidas corresponden a tu entorno.",
+    "personas": "Consulta la fuente o pide ayuda al proveedor antes de asumir que estás afectado.",
+}
+CONSULTAS_ADICIONALES = {
+    "Revisa las medidas del aviso oficial y verifica su aplicación.",
+    "Consulta la fuente o al proveedor para comprobar si esta noticia te afecta.",
+    "Verifica qué información falta antes de asumir que tu equipo está afectado.",
+    "Consulta el informe con tu equipo de seguridad antes de aplicar sus indicadores.",
+}
 
 
 def respaldo_accion(texto: str, evidencia: str) -> bool:
@@ -127,13 +137,10 @@ def resolver_editorial(e: EditorialAlerta, fragmentos: dict[str, str]) -> tuple[
             accion.update(texto="Consulta el informe con tu equipo de seguridad antes de aplicar sus indicadores.", orientacion_general=True, evidencia="")
             ajustes.append("Una tarea técnica se remitió al informe en lugar de presentarla como guía general.")
         accion["texto"] = texto_claro(accion["texto"])
-        if accion["orientacion_general"] and not re.match(
-                r"(?:consulta|revisa|comprueba|pregunta|verifica|contacta|solicita|habla|pide)\b",
-                accion["texto"].strip(), re.IGNORECASE):
+        if accion["orientacion_general"] and accion["texto"] not in {
+                *CONSULTAS.values(), *CONSULTAS_ADICIONALES}:
             # Orientación editorial, no un control técnico añadido sin respaldo.
-            accion["texto"] = ("Consulta el aviso y verifica con tu equipo qué medidas corresponden a tu entorno."
-                               if accion["rol"] == "administradores" else
-                               "Consulta la fuente o pide ayuda al proveedor antes de asumir que estás afectado.")
+            accion["texto"] = CONSULTAS[accion["rol"]]
             accion["evidencia"] = ""
             ajustes.append("Una orientación general se sustituyó por consulta prudente; revisar su utilidad.")
     # El caption público no reutiliza una redacción libre que pueda contradecir
@@ -169,10 +176,8 @@ def errores_editoriales(e: EditorialAlerta, fuente: str) -> list[str]:
     if not any(a.rol == "personas" for a in e.acciones):
         errores.append("editorial: incluye al menos una acción accesible a personas sin administrar redes")
     for accion in e.acciones:
-        if accion.orientacion_general and not re.match(
-                r"(?:consulta|revisa|comprueba|pregunta|verifica|contacta|solicita|habla|pide)\b",
-                accion.texto.strip(), re.IGNORECASE):
-            errores.append("editorial.acciones: orientación general debe empezar por Consulta, Revisa, Comprueba o Verifica; no uses prefijos de rol en texto")
+        if accion.orientacion_general and accion.texto not in {*CONSULTAS.values(), *CONSULTAS_ADICIONALES}:
+            errores.append("editorial.acciones: orientación general debe ser una consulta prudente del catálogo, no una tarea técnica sin respaldo")
         if not accion.orientacion_general and not cita_presente(accion.evidencia, fuente):
             errores.append("editorial: una medida específica requiere evidencia literal; si no puedes citarla, usa orientación general como consultar el aviso o pedir ayuda al proveedor")
         elif not accion.orientacion_general and not respaldo_accion(accion.texto, accion.evidencia):

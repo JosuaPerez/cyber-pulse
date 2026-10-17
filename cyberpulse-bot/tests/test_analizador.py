@@ -58,7 +58,7 @@ def analisis_valido(**cambios):
             "temporalidad": "vigencia_no_confirmada", "evidencia_temporal": "",
             "detalle": "El fallo permite ejecutar código sin credenciales; el aviso explica las condiciones.",
             "acciones": [
-                {"rol": "personas", "texto": "Consulta a quien administra tu VPN para comprobar si te afecta.", "orientacion_general": True, "evidencia": ""},
+                {"rol": "personas", "texto": "Consulta la fuente o pide ayuda al proveedor antes de asumir que estás afectado.", "orientacion_general": True, "evidencia": ""},
                 {"rol": "administradores", "texto": "Revisa las medidas del aviso oficial y verifica su aplicación.", "orientacion_general": True, "evidencia": ""}],
             "caption": "Si usas Acme VPN, consulta el aviso y comprueba con tu administrador si te afecta. ¿Ya lo revisaste?",
             "evidencias": ["Acme VPN flaw exploited in the wild"], "visual": "resumen", "nodos": [], "evidencia_relacion": ""},
