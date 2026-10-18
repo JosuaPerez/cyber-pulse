@@ -25,5 +25,16 @@
 .daily-v3.daily-alert-scope .editorial-audience p{font-size:29px;line-height:1.4}
 .daily-v3.daily-alert-scope .daily-next-step{padding:18px 22px;background:#112332;border-left:3px solid #55dce5}
 .daily-v3.daily-alert-mitigation .daily-points{justify-content:stretch;gap:20px;min-height:0}
-.daily-v3.daily-alert-mitigation .daily-points article{flex:1;align-items:center}
+.daily-v3.daily-alert-mitigation .daily-points article{flex:1;display:grid;grid-template-columns:46px minmax(0,1fr);align-content:center;align-items:start}
 .daily-v3.daily-alert-mitigation .daily-points article>p{font-size:33px;line-height:1.4}
+.daily-v3.daily-universal.daily-alert-mitigation .daily-points article>b{font-size:31px;line-height:1.4}
+
+/* Cierre junto a la atribución, con espacio flexible dentro de las tarjetas. */
+.daily-v3 .daily-source{margin-top:14px;margin-bottom:16px}
+.daily-v3 footer{padding-top:18px}
+.daily-v3.daily-alert-cover .daily-content,.daily-v3.daily-alert-mitigation .daily-content{padding-bottom:0}
+.daily-v3.daily-alert-context_risks .daily-content{display:flex;flex-direction:column;gap:20px}
+.daily-v3.daily-alert-context_risks .daily-technical{flex:1;display:flex;flex-direction:column;justify-content:center}
+.daily-v3.daily-alert-context_risks .daily-cves{margin:0;flex-shrink:0}
+.daily-v3.daily-alert-context_risks .editorial-limit{flex:1;display:flex;flex-direction:column;justify-content:center;margin-top:0}
+.daily-v3.daily-alert-context_risks .editorial-reference{margin:0;flex-shrink:0}
