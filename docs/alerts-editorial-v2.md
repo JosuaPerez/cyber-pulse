@@ -1,5 +1,9 @@
 # Alertas claras · contrato visual y editorial común (v2)
 
+> Documento del formato guardado v2. Las noticias nuevas usan el
+> [contrato v3](alerts-autonomas-v3.md); este documento conserva la referencia
+> de las revisiones y demostraciones anteriores.
+
 Esta capa sustituye la ficha especial de máquinas virtuales para nuevas alertas.
 Se aplica a TODAS las noticias que analiza el bot con `ALERTAS_VARIANTE=clara`, no
 a una lista de nombres, CVEs, fabricantes o medios. Reels, cheat sheets y el

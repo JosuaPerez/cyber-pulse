@@ -5,6 +5,18 @@ import { readSupportVisual, readEditorial, editorialLabels } from '../src/alert-
 const source = 'https://www.mozilla.org/en-US/security/advisories/mfsa2026-106/';
 const visual = JSON.stringify({ tipo: 'firefox_version', version: '158' });
 
+test('contrato v3 conserva explotación histórica sin sustituirla por una negación', () => {
+  const e = readEditorial(JSON.stringify({
+    tipo_noticia: 'vulnerabilidad', audiencia: 'mixta', temporalidad: 'historica',
+    resumen_hallazgo: 'Una corrección disponible para el fallo documentado.',
+    nota_vigencia: 'La fuente confirmó explotación activa al publicar.',
+    lo_que_no_podemos_concluir: 'No demuestra compromiso de tu instalación.',
+    a_quien_concierne: 'Quienes administran instalaciones del producto afectado.',
+  }));
+  assert.equal(editorialLabels(e).status, 'La fuente confirmó explotación activa al publicar.');
+  assert.equal(e.alcance, 'Quienes administran instalaciones del producto afectado.');
+});
+
 test('versión explícita con aviso de Mozilla', () => {
   assert.equal(readSupportVisual(visual, source).version, '158');
 });

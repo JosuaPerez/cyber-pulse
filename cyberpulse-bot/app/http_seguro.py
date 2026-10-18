@@ -16,6 +16,7 @@ HOSTS_CYBERPULSE = frozenset(
         "krebsonsecurity.com",
         "darkreading.com",
         "securityweek.com",
+        "sansec.io",
     }
 )
 CODIGOS_REDIRECCION = {301, 302, 303, 307, 308}

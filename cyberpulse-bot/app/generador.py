@@ -6,6 +6,7 @@ from playwright.sync_api import sync_playwright
 
 from app import config
 from app.editorial_alertas import EditorialAlerta
+from app.alertas_v3 import AnalisisAlerta
 
 def visual_apoyo_validado(meta):
     """Acepta datos explícitos revisados; no deduce versiones del título."""
@@ -45,6 +46,8 @@ def visual_apoyo_validado(meta):
 
 def parametros_variante_alerta(meta, variante):
     """Variante explícita; no modifica educativos ni infiere datos de la noticia."""
+    if meta.get("familia") == "alerta" and meta.get("editorial_version") == 3:
+        variante = "clara"
     if variante not in {"clasica", "clara", "editorial"}:
         raise ValueError("La variante de alerta debe ser clasica, clara o editorial")
     if variante == "clasica" or meta.get("familia", "alerta") != "alerta":
@@ -71,6 +74,16 @@ def cantidad_imagenes_esperada(meta, variante=None):
 def construir_alerta_clara(datos):
     """Reordena datos validados sin resumir, truncar ni inventar alcance."""
     shared = {"familia": "alerta", "level": datos.get("meta", {}).get("severidad", "medium")}
+    if datos.get("meta", {}).get("editorial_version") == 3:
+        e = AnalisisAlerta.model_validate(datos["alerta"])
+        roles = {"para_ti": "Para ti", "para_ti_admin": "Si administras el sistema", "para_equipos_ti": "Equipos de TI"}
+        return [
+            {**shared, "type": "card_lo_esencial", "title": e.portada_titulo, "description": e.resumen_hallazgo},
+            {**shared, "type": "card_te_afecta", "title": "A quién le concierne", "description": e.hecho_documentado},
+            {**shared, "type": "card_contexto", "title": "Qué sabemos y qué no", "description": e.detalle_analisis},
+            {**shared, "type": "card_que_hacer", "title": "Qué puedes hacer", "description": "Medidas según tu situación",
+             "summary": json.dumps([f"{roles[a.rol]}: {a.texto}" for a in e.acciones], ensure_ascii=False)},
+        ]
     editorial = datos.get("meta", {}).get("editorial")
     if editorial:
         e = EditorialAlerta.model_validate(editorial)

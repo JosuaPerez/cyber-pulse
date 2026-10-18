@@ -27,7 +27,9 @@ function identifiers(value) {
   } catch { return []; }
 }
 
-export default function DailyAlert({ type, level, title, description, summary = [], currentSlide = 1, totalSlides = 5, sourceName = '', sourceUrl = '', exploitation = 'desconocido', cves = '[]', layout = 'editorial', seriesLabel = 'ALERTAS DIARIAS', coverVisual = null, detailVisual = null, sourceDate = '', statusText = '', reviewLabel = '', preparedOn = '', supportVisual = '{}', editorialData = '{}' }) {
+export default function DailyAlert({ type: cardType, level, title, description, summary = [], currentSlide = 1, totalSlides = 5, sourceName = '', sourceUrl = '', exploitation = 'desconocido', cves = '[]', layout = 'editorial', seriesLabel = 'ALERTAS DIARIAS', coverVisual = null, detailVisual = null, sourceDate = '', statusText = '', reviewLabel = '', preparedOn = '', supportVisual = '{}', editorialData = '{}' }) {
+  const type = ({ card_lo_esencial: 'cover', card_te_afecta: 'scope', card_contexto: 'context_risks', card_que_hacer: 'mitigation' })[cardType] || cardType;
+  const v3 = cardType?.startsWith('card_');
   const severity = Object.hasOwn(severities, level) ? severities[level] : ['SIN CLASIFICAR', '#c8d4e9'];
   const section = Object.hasOwn(sections, type) ? sections[type] : 'EN CONTEXTO';
   const status = statusText || (Object.hasOwn(exploitationLabels, exploitation) ? exploitationLabels[exploitation] : exploitationLabels.desconocido);
@@ -42,7 +44,7 @@ export default function DailyAlert({ type, level, title, description, summary = 
   const isolation = !editorial && visual?.tipo === 'vm_isolation';
   const labels = editorialLabels(editorial);
   const temporal = labels.status;
-  return <main className={`daily-alert daily-alert-${type} daily-layout-${safeLayout}${compact ? ' daily-compact' : ''}${visual ? ' daily-has-visual' : ''}${editorial ? ' daily-universal' : ''}`}>
+  return <main className={`daily-alert daily-alert-${type} daily-layout-${safeLayout}${compact ? ' daily-compact' : ''}${visual ? ' daily-has-visual' : ''}${editorial ? ' daily-universal' : ''}${v3 ? ' daily-v3' : ''}`}>
     <header><div><svg viewBox="0 0 60 60" fill="none" aria-hidden="true"><path d="M2 30h12l8-18 13 36 8-18h15" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" /></svg><span>CyberPulse</span></div><span>{seriesLabel}</span></header>
     <div className="daily-eyebrow"><span>{labels.policy && type === 'scope' ? '¿EN TU ORGANIZACIÓN?' : section}</span><span style={{ color: severity[1] }}>{labels.context || `SEVERIDAD ${severity[0]}`}</span></div>
     <h1><Text>{title}</Text></h1>

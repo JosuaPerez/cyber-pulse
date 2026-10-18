@@ -1,0 +1,29 @@
+{
+  "fuente_nombre": "Adobe APSB26-146 · Sansec",
+  "fuente_url": "https://www.adobe.com/trust/security/products/commerce/apsb26-146.html",
+  "fecha_fuente": "2026-09-07",
+  "fecha_revision": "2026-10-17 UTC",
+  "nota_revision": "Tanda dedicada exclusivamente a StyleSmuggler a petición del usuario. Revisión editorial, no resultado automático de Gemini. Fuentes: https://sansec.io/research/stylesmuggler-0day y https://experienceleague.adobe.com/en/docs/commerce-knowledge-base/kb/announcements/commerce-apsb26-146. La fecha de publicación del aviso no es la fecha de preparación. Explotación confirmada en septiembre; no afirma una observación nueva de ataques en octubre.",
+  "editorial": {
+    "tipo_noticia": "vulnerabilidad",
+    "gancho": "¿Tu tienda usa Magento? Revisa este fallo",
+    "resumen": "StyleSmuggler permite ejecutar código sin iniciar sesión. Sansec confirmó ataques desde el 4 de septiembre.",
+    "audiencia": "mixta",
+    "hecho": "StyleSmuggler: CVE-2026-75650, CVSS 10,0. Adobe publicó el hotfix VULN-39341.",
+    "alcance": "Magento Open Source, Adobe Commerce y Commerce B2B: compara edición, versión y parches con el aviso de Adobe. Si una agencia mantiene tu tienda, pide confirmación de la remediación. Comprar en ella no demuestra un robo de datos.",
+    "limite": "Aplicar el parche no elimina una intrusión previa: también hay que revisar posibles compromisos.",
+    "temporalidad": "historica",
+    "evidencia_temporal": "Attacks started September 4th.",
+    "detalle": "El código malicioso se ejecuta al generar un correo de pago fallido; nadie necesita abrirlo. Sansec confirmó ataques desde el 4 de septiembre de 2026. CISA lo incorporó a KEV.",
+    "acciones": [
+      {"rol": "personas", "texto": "Pide a quien mantiene tu tienda evidencia de la remediación y revisión de intrusiones.", "orientacion_general": true, "evidencia": ""},
+      {"rol": "administradores", "texto": "Aplica el hotfix VULN-39341 correspondiente a tu versión y verifica su instalación.", "orientacion_general": false, "evidencia": "Apply Adobe's VULN-39341 hotfix for CVE-2026-75650."},
+      {"rol": "administradores", "texto": "Después del parche, rota la clave de cifrado y las credenciales según la guía de Adobe.", "orientacion_general": false, "evidencia": "To fully remediate this issue, rotate not only your encryption key but all credentials that may have been encrypted or exposed using it, including server, API, and integration credentials."}
+    ],
+    "caption": "StyleSmuggler (CVE-2026-75650): explotación confirmada desde septiembre. Comprueba VULN-39341, revisa posibles intrusiones y completa la rotación de claves y credenciales. Parchear no limpia una tienda ya comprometida. Guía: https://experienceleague.adobe.com/en/docs/commerce-knowledge-base/kb/announcements/commerce-apsb26-146 Investigación: https://sansec.io/research/stylesmuggler-0day ¿Quién comprobará la remediación de tu tienda?",
+    "evidencias": ["Attacks started September 4th."],
+    "visual": "resumen",
+    "nodos": [],
+    "evidencia_relacion": ""
+  }
+}

@@ -9,6 +9,7 @@ from google import genai
 from app import config
 from app.almacenamiento_r2 import subir_imagen_publica
 from app.analizador import ErrorAnalisis, NoticiaDescartada, analizar_noticia
+from app.alertas_v3 import validar_paquete_publicacion
 from app.historial_db import (
     actualizar_estado,
     inicializar_db,
@@ -49,7 +50,7 @@ class CyberPulseBot:
         self.ultimo_meta_post_id = None
 
     def analizar_noticia_con_ia(self, noticia_rss):
-        """Procesa la noticia y estructura los datos para las 5 diapositivas."""
+        """Procesa una noticia nueva en el contrato validado de cuatro diapositivas."""
         logger.info("Procesando noticia con Gemini: %s", noticia_rss["title"])
         try:
             return analizar_noticia(
@@ -349,6 +350,8 @@ def procesar_una_noticia(bot):
         if not datos_procesados:
             return
 
+        validar_paquete_publicacion(datos_procesados)
+
         clave = noticia["clave_historial"]
         meta = datos_procesados.get("meta", {})
         actualizar_estado(
@@ -382,7 +385,7 @@ def procesar_una_noticia(bot):
             )
             (config.IMAGENES_DIR.parent / "referencia_tecnica.txt").write_text(
                 f"Fuente: {meta.get('fuente_url', '')}\n\n"
-                f"{datos_procesados.get('slide_3', {}).get('description', '')}\n\n"
+                f"{datos_procesados.get('alerta', {}).get('detalle_analisis', '')}\n\n"
                 "Material técnico para revisión; no implica compromiso de un equipo.\n",
                 encoding="utf-8",
             )

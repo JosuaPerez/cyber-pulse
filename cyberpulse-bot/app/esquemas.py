@@ -5,6 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, model_validator
 from app.editorial_alertas import EditorialAlerta
+from app.alertas_v3 import AnalisisAlerta as AnalisisAlerta  # contrato nuevo; AnalisisIA queda para educativos
 
 # Límites de longitud (caracteres). Se usan en la validación Y en el prompt,
 # así nunca se desincronizan.

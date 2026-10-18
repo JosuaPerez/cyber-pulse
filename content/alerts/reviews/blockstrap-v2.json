@@ -1,0 +1,44 @@
+{
+  "fuente_nombre": "Adobe APSB26-153 · Sansec",
+  "fuente_url": "https://www.adobe.com/trust/security/products/commerce/apsb26-153.html",
+  "fecha_fuente": "2026-10-15",
+  "fecha_revision": "2026-10-17 UTC",
+  "nota_revision": "Edición para revisión del usuario basada en su propuesta y contrastada con Adobe y https://sansec.io/research/blockstrap-magento-rce. No publicada. Sansec no había observado ataques en tiendas al publicar el informe; no es una garantía actual. Las versiones y disponibilidad del parche dependen de edición y rama. Fuente periodística: https://www.bleepingcomputer.com/news/security/critical-blockstrap-flaw-lets-hackers-run-code-on-magento-servers/",
+  "editorial": {
+    "tipo_noticia": "vulnerabilidad",
+    "gancho": "¿Tu tienda usa Magento? Revisa este fallo",
+    "resumen": "BlockStrap permite ejecutar código en servidores vulnerables sin iniciar sesión.",
+    "audiencia": "mixta",
+    "hecho": "Adobe corrigió BlockStrap: CVE-2026-103849, con puntuación CVSS de 10,0.",
+    "alcance": "Magento Open Source, Adobe Commerce y Commerce B2B: compara edición, versión y parches con la tabla de Adobe. Si una agencia mantiene tu tienda, pídele confirmación. Comprar en ella no demuestra que tus datos hayan sido robados.",
+    "limite": "Sansec no observó ataques de BlockStrap al publicar; StyleSmuggler sí tuvo explotación confirmada.",
+    "temporalidad": "vigencia_no_confirmada",
+    "evidencia_temporal": "Sansec has not seen BlockStrap attacks on live stores.",
+    "detalle": "Contenido del atacante en una plantilla de correo vuelve a procesarse como una instrucción. Esto puede permitir ejecutar código PHP en el servidor de la tienda.",
+    "acciones": [
+      {
+        "rol": "personas",
+        "texto": "Si gestionan tu tienda, pide evidencia de que ambas correcciones están aplicadas.",
+        "orientacion_general": true,
+        "evidencia": ""
+      },
+      {
+        "rol": "administradores",
+        "texto": "Para StyleSmuggler: verifica VULN-39341 y rota claves y credenciales según Adobe.",
+        "orientacion_general": false,
+        "evidencia": "To fully remediate this issue, rotate not only your encryption key but all credentials that may have been encrypted or exposed using it, including server, API, and integration credentials."
+      },
+      {
+        "rol": "administradores",
+        "texto": "Aplica 2026-oct o el parche de tu edición y verifica el resultado: Composer solo no basta.",
+        "orientacion_general": false,
+        "evidencia": "A plain Composer install still has the vulnerable base version"
+      }
+    ],
+    "caption": "Dos fallos distintos: BlockStrap (octubre) y StyleSmuggler (septiembre, con explotación confirmada). Verifica primero VULN-39341 y completa la rotación de claves y credenciales de Adobe; octubre no sustituye esa remediación. Guía: https://experienceleague.adobe.com/en/docs/commerce-knowledge-base/kb/announcements/commerce-apsb26-146 Análisis: https://sansec.io/research/blockstrap-magento-rce ¿Quién comprobará ambas correcciones?",
+    "evidencias": ["BlockStrap (CVE-2026-103849) is a CVSS 10.0 Magento and Adobe Commerce flaw that gives unauthenticated attackers remote code execution."],
+    "visual": "resumen",
+    "nodos": [],
+    "evidencia_relacion": ""
+  }
+}
