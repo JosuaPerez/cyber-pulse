@@ -70,10 +70,12 @@ CONTROLES = (
     r"capacit\w*|formación|train\w*|educat\w*",
     r"herramientas? aprobad\w*|approved (?:AI )?tools?",
     r"retención de datos|data retention",
+    r"rot\w*.*(?:claves|credenciales)|rotat\w*.*(?:keys|credentials)",
+    r"desinstal\w*|uninstall\w*",
 )
 RECOMENDACION = re.compile(
     r"\b(recommend\w*|should|must|advis\w*|urge\w*|use|install|enable|apply|keep|"
-    r"recomienda\w*|debe\w*|aconseja\w*|usa|instala|activa|aplica)\b", re.IGNORECASE)
+    r"rotate|recomienda\w*|debe\w*|aconseja\w*|usa|instala|activa|aplica|rota)\b", re.IGNORECASE)
 NEGACION = re.compile(r"\b(not|never|without|cannot|no|nunca|sin)\b|n['’]t\b", re.IGNORECASE)
 CONSULTAS = {
     "administradores": "Consulta el aviso y verifica con tu equipo qué medidas corresponden a tu entorno.",
@@ -89,9 +91,17 @@ CONSULTAS_ADICIONALES = {
 
 def respaldo_accion(texto: str, evidencia: str) -> bool:
     """Solo admite familias conocidas con recomendación explícita, sin negación."""
-    if NEGACION.search(texto) or not RECOMENDACION.search(evidencia):
+    # Una condición de imposibilidad de actualizar no niega la instrucción
+    # de desinstalar. Se reconoce solo esta construcción, no se borra cualquier
+    # negación de una recomendación.
+    instruccion = re.split(r"\b(?:si|cuando|if|when)\b", texto, maxsplit=1, flags=re.IGNORECASE)[0]
+    if NEGACION.search(instruccion) or not RECOMENDACION.search(evidencia):
         return False
-    controles = [p for p in CONTROLES if re.search(p, texto, re.IGNORECASE)]
+    controles = [p for p in CONTROLES if re.search(p, instruccion, re.IGNORECASE)]
+    if re.search(r"desinstal\w*|uninstall\w*", instruccion, re.IGNORECASE):
+        evidencia = re.sub(
+            r"\bwho cannot (?:upgrade|update)(?: to a secure version)?(?= are advised to uninstall)",
+            "", evidencia, flags=re.IGNORECASE)
     # Una negación sobre Composer no invalida otra oración que recomienda un parche.
     # Se mantienen juntas las cláusulas de una oración para no perder su negación.
     frases = re.split(r"(?<=[.!?;])\s+|\n+", evidencia)

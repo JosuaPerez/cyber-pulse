@@ -8,16 +8,9 @@ from app.bot_cyberpulse import CyberPulseBot, ResultadoPublicacion
 
 
 def _datos_validos():
-    return {
-        "slide_1": {"title": "Titulo", "description": "Descripcion"},
-        "slide_2": {"description": "Problema"},
-        "slide_3": {"description": "Detalle"},
-        "slide_4": {"description": "Impacto", "points": ["a", "b", "c"]},
-        "slide_5": {"description": "Mitigacion", "points": ["a", "b", "c"]},
-        "caption": "Caption",
-        "hilo_x": [],
-        "meta": {"cves": [], "severidad": "medium"},
-    }
+    from app.alertas_v3 import AnalisisAlerta, a_datos_publicacion
+    from test_esquema_alerta import valido
+    return a_datos_publicacion(AnalisisAlerta(**valido()), "Acme", "https://example.org/security")
 
 
 def test_nueva_noticia_no_hereda_meta_post_id_anterior(monkeypatch):
@@ -256,3 +249,41 @@ def test_no_admite_una_cantidad_arbitraria_para_publicar():
     bot = _bot_meta(SesionMeta([]))
     with pytest.raises(ValueError, match="cantidad esperada"):
         bot.publicar_carrusel_local([], "Texto", clave_historial="test", cantidad_esperada=3)
+
+
+@pytest.mark.parametrize("cantidad", [3, 4, 5])
+def test_flujo_noticia_nueva_solo_publica_cuatro_imagenes(monkeypatch, cantidad):
+    publicaciones = []
+    fallos = []
+    noticia = {"title": "Noticia", "clave_historial": "nueva"}
+    bot = SimpleNamespace(
+        ultimo_meta_post_id=None,
+        analizar_noticia_con_ia=lambda n: _datos_validos(),
+        publicar_carrusel_local=lambda *args, **kwargs: (
+            publicaciones.append((args, kwargs)) or ResultadoPublicacion.PUBLICADA),
+    )
+    monkeypatch.setattr(bot_cyberpulse, "obtener_noticia_nueva", lambda: noticia)
+    monkeypatch.setattr(bot_cyberpulse, "actualizar_estado", lambda *args, **kwargs: None)
+    monkeypatch.setattr(bot_cyberpulse, "registrar_fallo", lambda *args: fallos.append(args))
+    monkeypatch.setattr(bot_cyberpulse, "generar_imagenes_carrusel", lambda d: [f"{i}.png" for i in range(cantidad)])
+    monkeypatch.setattr(bot_cyberpulse.config, "DRY_RUN", False)
+    monkeypatch.setattr(bot_cyberpulse.config, "PUBLICAR_EN_X", False)
+    if cantidad == 4:
+        bot_cyberpulse.procesar_una_noticia(bot)
+        assert publicaciones[0][1]["cantidad_esperada"] == 4
+        assert not fallos
+    else:
+        with pytest.raises(RuntimeError, match="Carrusel incompleto"):
+            bot_cyberpulse.procesar_una_noticia(bot)
+        assert not publicaciones
+
+
+def test_flujo_legacy_bloqueado_antes_de_renderizar_o_subir(monkeypatch):
+    renders = []
+    bot = SimpleNamespace(ultimo_meta_post_id=None, analizar_noticia_con_ia=lambda n: {"meta": {"editorial_version": 2}})
+    monkeypatch.setattr(bot_cyberpulse, "obtener_noticia_nueva", lambda: {"title": "Vieja", "clave_historial": "vieja"})
+    monkeypatch.setattr(bot_cyberpulse, "registrar_fallo", lambda *args: None)
+    monkeypatch.setattr(bot_cyberpulse, "generar_imagenes_carrusel", lambda d: renders.append(d))
+    with pytest.raises(ValueError, match="análisis nuevo"):
+        bot_cyberpulse.procesar_una_noticia(bot)
+    assert not renders

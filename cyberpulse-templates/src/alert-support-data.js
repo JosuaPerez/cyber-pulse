@@ -21,13 +21,17 @@ export function readSupportVisual(value, sourceUrl) {
 
 export function readEditorial(value) {
   try {
-    const e = JSON.parse(value);
+    let e = JSON.parse(value);
+    if (typeof e?.resumen_hallazgo === 'string') {
+      e = { ...e, limite: e.lo_que_no_podemos_concluir, alcance: e.a_quien_concierne };
+    }
     if (!e || !['general', 'administradores', 'mixta'].includes(e.audiencia) ||
         !['historica', 'vigencia_no_confirmada'].includes(e.temporalidad) ||
         typeof e.limite !== 'string' || e.limite.length < 15 || e.limite.length > 100) return null;
     const tipo = e.tipo_noticia ?? 'incidente';
     if (!['incidente', 'vulnerabilidad', 'riesgo_operativo'].includes(tipo)) return null;
     return { tipo_noticia: tipo, audiencia: e.audiencia, temporalidad: e.temporalidad, limite: e.limite,
+      nota_vigencia: typeof e.nota_vigencia === 'string' && e.nota_vigencia.length <= 110 ? e.nota_vigencia : '',
       alcance: typeof e.alcance === 'string' && e.alcance.length <= 240 ? e.alcance : '' };
   } catch { return null; }
 }
@@ -37,9 +41,9 @@ export function editorialLabels(e) {
   return {
     policy,
     context: policy ? 'RIESGO OPERATIVO' : null,
-    status: policy ? 'Prácticas y políticas de uso; no confirma una brecha en tu organización.' :
+    status: e?.nota_vigencia || (policy ? 'Prácticas y políticas de uso; no confirma una brecha en tu organización.' :
       e?.temporalidad === 'historica' ? 'Hechos pasados documentados; actividad actual no confirmada.' :
-        'Vigencia actual sin confirmar: consulta el contexto de la fuente.',
+        'Vigencia actual sin confirmar: consulta el contexto de la fuente.'),
     scopePrompt: policy ? 'Identifica qué personas, herramientas y políticas intervienen en tu organización.' :
       'Comprueba las condiciones del caso antes de asumir que estás afectado.',
     reference: 'Consulta el informe original para conocer el contexto y sus límites.',

@@ -24,7 +24,15 @@ def aplicar_revision(datos, revision):
     url = urlsplit(fuente_url)
     if url.scheme != "https" or not url.hostname:
         raise ValueError("La revisión requiere una fuente HTTPS")
-    resultado = copy.deepcopy(datos)
+    resultado = {"meta": copy.deepcopy(datos.get("meta", {}))}
+    # Una edición manual legacy nunca hereda el sello de validación automática
+    # ni identificadores de otro artículo/base.
+    resultado.pop("alerta", None)
+    resultado.pop("hilo_x", None)
+    resultado["meta"].pop("validacion", None)
+    resultado["meta"]["cves"] = []
+    resultado["meta"]["estado_explotacion"] = "desconocido"
+    resultado["meta"]["familia"] = "alerta"
     resultado["meta"].update({"editorial": e.model_dump(), "editorial_version": 2,
                               "fuente_nombre": revision["fuente_nombre"], "fuente_url": fuente_url,
                               "fecha_fuente": revision["fecha_fuente"],

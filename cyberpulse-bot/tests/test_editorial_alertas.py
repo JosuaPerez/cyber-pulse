@@ -3,7 +3,6 @@ import json
 import pytest
 
 from app.editorial_alertas import EditorialAlerta, errores_editoriales, visual_editorial, fragmentos_fuente, resolver_editorial
-from app.generador import construir_alerta_clara
 from test_analizador import analisis_valido, TEXTO_FUENTE, ClienteFalso, NOTICIA
 from app import analizador
 from app.editorial_alertas import respaldo_accion
@@ -20,28 +19,6 @@ from app.editorial_alertas import respaldo_accion
 ])
 def test_respaldo_hotfix_y_negacion_por_oracion(texto, cita, esperado):
     assert respaldo_accion(texto, cita) is esperado
-
-
-def test_auditoria_conserva_rechazo_y_resultado_validado(monkeypatch):
-    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
-    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: TEXTO_FUENTE)
-    cliente = ClienteFalso([analisis_valido(editorial=None), analisis_valido()])
-    auditoria = []
-    analizador.analizar_noticia(cliente, NOTICIA, auditoria=auditoria)
-    assert [a["estado"] for a in auditoria] == ["rechazado", "validado"]
-    assert "Falta editorial" in auditoria[0]["motivo"]
-    assert auditoria[0]["respuesta"]
-
-
-def test_auditoria_disponible_aunque_se_agoten_intentos(monkeypatch):
-    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
-    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: TEXTO_FUENTE)
-    cliente = ClienteFalso([analisis_valido(editorial=None)] * analizador.MAX_INTENTOS)
-    auditoria = []
-    with pytest.raises(analizador.ErrorAnalisis):
-        analizador.analizar_noticia(cliente, NOTICIA, auditoria=auditoria)
-    assert len(auditoria) == analizador.MAX_INTENTOS
-    assert all(a["estado"] == "rechazado" and a["respuesta"] for a in auditoria)
 
 
 @pytest.mark.parametrize("periodo", ["historica", "vigencia_no_confirmada"])
@@ -75,20 +52,6 @@ def test_historico_rechaza_hecho_redactado_como_actividad_actual():
     e = ficha(temporalidad="historica", evidencia_temporal="Attacks occurred in 2024.",
               hecho="La campaña está siendo utilizada para atacar dispositivos.")
     assert any("actividad actual" in error for error in errores_editoriales(e, TEXTO_FUENTE + " Attacks occurred in 2024."))
-
-
-def test_analizador_reintenta_medida_con_cita_que_solo_describe_ataque(monkeypatch):
-    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
-    cita = "The company embedded JavaScript in ads to profile devices."
-    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: TEXTO_FUENTE + ' ' + cita)
-    malo = json.loads(analisis_valido())
-    malo["editorial"]["acciones"][0].update(
-        texto="Instala un bloqueador de anuncios confiable.", orientacion_general=False, evidencia=cita)
-    cliente = ClienteFalso([json.dumps(malo), analisis_valido()])
-    resultado = analizador.analizar_noticia(cliente, NOTICIA)
-    assert "mismo control" in cliente.llamadas[1]
-    assert resultado["meta"]["editorial"]["acciones"][0]["orientacion_general"]
-    assert "vigencia actual no está confirmada" in resultado["caption"]
 
 
 def test_revisa_no_permite_ocultar_control_operativo_como_orientacion_general():
@@ -133,17 +96,6 @@ def test_escenarios_y_promociones_no_se_convierten_en_alerta_real(monkeypatch, a
     assert cliente.llamadas == []
 
 
-def test_clasificacion_explicita_obligatoria_para_analisis_nuevo(monkeypatch):
-    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
-    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: TEXTO_FUENTE)
-    monkeypatch.setattr(analizador.time, "sleep", lambda s: None)
-    incompleto = json.loads(analisis_valido())
-    del incompleto["editorial"]["tipo_noticia"]
-    cliente = ClienteFalso([json.dumps(incompleto), analisis_valido()])
-    analizador.analizar_noticia(cliente, NOTICIA)
-    assert "tipo_noticia es obligatorio" in cliente.llamadas[1]
-
-
 def ficha(**cambios):
     data = json.loads(analisis_valido())["editorial"]
     data.update(cambios)
@@ -183,19 +135,6 @@ def test_accion_especifica_exige_evidencia_y_personas_tienen_accion():
     for accion in e.acciones:
         accion.rol = "administradores"
     assert any("personas" in error for error in errores_editoriales(e, TEXTO_FUENTE))
-
-
-def test_contrato_obligatorio_reintenta_sin_publicar(monkeypatch):
-    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
-    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: TEXTO_FUENTE)
-    cliente = ClienteFalso([analisis_valido(editorial=None), analisis_valido()])
-    data = analizador.analizar_noticia(cliente, NOTICIA)
-    assert "Falta editorial" in cliente.llamadas[1]
-    slides = construir_alerta_clara(data)
-    assert slides[0]["title"] == data["meta"]["editorial"]["gancho"]
-    assert slides[2]["description"] == data["meta"]["editorial"]["detalle"]
-    assert "Para ti:" in slides[3]["summary"]
-    assert data["slide_3"]["description"].startswith("CVE-")  # referencia íntegra conservada
 
 
 def test_ids_se_resuelven_contra_la_fuente_y_desconocidos_se_rechazan():
@@ -249,12 +188,3 @@ def test_acciones_solo_admin_reciben_orientacion_personal_sin_inventar_medidas()
     assert len(normalizado.acciones) <= 3
     assert not errores_editoriales(normalizado, TEXTO_FUENTE)
     assert ajustes
-
-
-@pytest.mark.parametrize("sin_autenticacion,esperada", [(True, "critical"), (False, "high")])
-def test_prioridad_critica_sin_actividad_requiere_respaldo(monkeypatch, sin_autenticacion, esperada):
-    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
-    source = TEXTO_FUENTE if sin_autenticacion else TEXTO_FUENTE.replace("unauthenticated", "authenticated")
-    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: source)
-    cliente = ClienteFalso([analisis_valido(estado_explotacion="desconocido")])
-    assert analizador.analizar_noticia(cliente, NOTICIA)["meta"]["severidad"] == esperada

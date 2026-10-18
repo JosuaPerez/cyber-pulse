@@ -27,7 +27,8 @@ function identifiers(value) {
   } catch { return []; }
 }
 
-export default function DailyAlert({ type, level, title, description, summary = [], currentSlide = 1, totalSlides = 5, sourceName = '', sourceUrl = '', exploitation = 'desconocido', cves = '[]', layout = 'editorial', seriesLabel = 'ALERTAS DIARIAS', coverVisual = null, detailVisual = null, sourceDate = '', statusText = '', reviewLabel = '', preparedOn = '', supportVisual = '{}', editorialData = '{}' }) {
+export default function DailyAlert({ type: cardType, level, title, description, summary = [], currentSlide = 1, totalSlides = 5, sourceName = '', sourceUrl = '', exploitation = 'desconocido', cves = '[]', layout = 'editorial', seriesLabel = 'ALERTAS DIARIAS', coverVisual = null, detailVisual = null, sourceDate = '', statusText = '', reviewLabel = '', preparedOn = '', supportVisual = '{}', editorialData = '{}' }) {
+  const type = ({ card_lo_esencial: 'cover', card_te_afecta: 'scope', card_contexto: 'context_risks', card_que_hacer: 'mitigation' })[cardType] || cardType;
   const severity = Object.hasOwn(severities, level) ? severities[level] : ['SIN CLASIFICAR', '#c8d4e9'];
   const section = Object.hasOwn(sections, type) ? sections[type] : 'EN CONTEXTO';
   const status = statusText || (Object.hasOwn(exploitationLabels, exploitation) ? exploitationLabels[exploitation] : exploitationLabels.desconocido);
