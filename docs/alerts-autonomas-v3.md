@@ -41,9 +41,11 @@ histórica confirmada por una frase genérica que niegue ataques.
   cualquier tarjeta/caption contradice ese estado y provoca rechazo. El silencio
   de una fuente corresponde a estado desconocido, no a ausencia confirmada.
 - La prioridad crítica necesita explotación confirmada o una referencia
-  explícita a ejecución remota sin autenticación. La prioridad editorial es
-  conservadora; puede ser inferior a la etiqueta del fabricante cuando el
-  extractor no ofrece respaldo suficiente para esa comprobación.
+  explícita a ejecución remota sin autenticación. Se admiten párrafos separados
+  asociados al mismo CVE y expresiones como «does not require authentication».
+  Requerir módulos adicionales no implica requerir credenciales: se mantiene
+  prioridad crítica y se explican esas condiciones. No se asocia ejecución remota
+  de un CVE con ausencia de autenticación de otro.
 - Las acciones específicas necesitan una recomendación literal del mismo
   control. Se admiten familias conocidas: actualización, copias, multifactor,
   ayuda especializada, políticas, formación, herramientas aprobadas, retención,
@@ -51,7 +53,8 @@ histórica confirmada por una frase genérica que niegue ataques.
 - Máximo una consulta general, al menos una medida concreta y ningún relleno
   con consultas repetidas. Una acción inválida no se sustituye por texto genérico.
 - Frases duplicadas entre tarjetas y jerga técnica no apta para el carrusel
-  provocan rechazo.
+  provocan rechazo. Los ganchos no admiten RCE, SSRF, XSS ni identificadores CVE;
+  presentan el producto y una pregunta/acción comprensible.
 
 Gemini recibe el motivo y el borrador rechazado para corregir la respuesta
 completa. Tras tres intentos fallidos no se devuelve un paquete publicable.
@@ -82,9 +85,11 @@ y los rechazos; no incluye credenciales. No lee/reserva noticias del historial,
 no sube archivos a R2 y no llama a Instagram ni X.
 
 Los medios y registros generados están excluidos de Git. La muestra de Drupal
-del 18 de octubre de 2026 se generó con Gemini después de rechazar una afirmación
-de ausencia de ataques sin respaldo y una prioridad crítica sin evidencia
-suficiente para el filtro. Se revisaron versiones y medidas frente a:
+del 18 de octubre de 2026 se generó con Gemini. La primera versión expuso un
+falso negativo del filtro: solo reconocía «unauthenticated» cerca de «remote code
+execution». Ese filtro se corrigió para reconocer rutas condicionadas a módulos
+y la expresión «does not require authentication» del mismo CVE. Se revisaron
+versiones y medidas frente a:
 
 - https://www.drupal.org/sa-core-2026-014
 - https://www.drupal.org/sa-contrib-2026-218

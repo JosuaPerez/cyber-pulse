@@ -14,3 +14,16 @@
 .daily-universal.daily-compact.daily-alert-mitigation .daily-points article{padding:30px 29px}
 .daily-universal.daily-compact.daily-alert-mitigation .daily-points article>p{font-size:31px;line-height:1.4}
 .daily-universal.daily-alert-mitigation .daily-save-action{margin-top:0}
+
+/* El espacio disponible amplía las tarjetas, no queda como hueco antes del pie. */
+.daily-v3.daily-alert-cover .daily-paper{flex:1;display:flex;flex-direction:column;justify-content:center}
+.daily-v3.daily-alert-cover .editorial-visual{flex:1;display:flex;flex-direction:column;justify-content:center}
+.daily-v3.daily-alert-cover .daily-next-step{flex-shrink:0}
+.daily-v3.daily-alert-cover .daily-paper>p{font-size:34px;line-height:1.35}
+.daily-v3.daily-alert-scope .daily-paper{padding:32px}
+.daily-v3.daily-alert-scope .editorial-audience{flex:1;display:flex;flex-direction:column;justify-content:center;padding:30px 0}
+.daily-v3.daily-alert-scope .editorial-audience p{font-size:29px;line-height:1.4}
+.daily-v3.daily-alert-scope .daily-next-step{padding:18px 22px;background:#112332;border-left:3px solid #55dce5}
+.daily-v3.daily-alert-mitigation .daily-points{justify-content:stretch;gap:20px;min-height:0}
+.daily-v3.daily-alert-mitigation .daily-points article{flex:1;align-items:center}
+.daily-v3.daily-alert-mitigation .daily-points article>p{font-size:33px;line-height:1.4}

@@ -108,6 +108,35 @@ def identificador_presente(valor: str, texto: str) -> bool:
     return bool(re.search(r"(?<![\w-])" + re.escape(valor) + r"(?![\w-])", texto, re.I))
 
 
+def rce_sin_autenticacion_respaldada(fuente: str, cves: list[str]) -> bool:
+    """Vincula ejecución remota y rutas sin autenticación al mismo CVE.
+
+    Pueden estar en párrafos distintos. Una condición de módulos adicionales
+    no equivale a exigir credenciales; tampoco basta un titular con 'critical'.
+    """
+    patron_cve = r"\bCVE-\d{4}-\d{4,7}\b"
+    identificadores = set(re.findall(patron_cve, fuente.upper()))
+    objetivos = set(cves) or identificadores
+    rce = re.compile(r"remote code execution|ejecución (?:remota de código|de código remotamente)", re.I)
+    sin_auth = re.compile(r"\bunauthenticated\b|requires? no authentication|does not require authentication|"
+                          r"without authentication|sin autenticación|no requiere autenticación", re.I)
+    negada = re.compile(r"not (?:an? )?unauthenticated|(?:not|never|cannot|does not) "
+                        r"(?:allow|permit|enable)|not exploitable without authentication|"
+                        r"(?<!not )\brequires? authentication|no permite", re.I)
+    partes = [p for p in re.split(r"\n+", fuente) if p.strip() and len(p) <= 1500]
+
+    def relacionado(parte, cve):
+        presentes = set(re.findall(patron_cve, parte.upper()))
+        return presentes == {cve} or (not presentes and identificadores == {cve})
+
+    if not objetivos:
+        return any(rce.search(p) and sin_auth.search(p) and not negada.search(p) for p in partes)
+    return all(
+        any(relacionado(p, cve) and rce.search(p) and not negada.search(p) for p in partes)
+        and any(relacionado(p, cve) and sin_auth.search(p) and not negada.search(p) for p in partes)
+        for cve in objetivos)
+
+
 def errores_contra_fuente(a: AnalisisAlerta, fuente: str) -> list[str]:
     errores = []
     normal = " ".join(fuente.split()).casefold()
@@ -136,7 +165,7 @@ def errores_contra_fuente(a: AnalisisAlerta, fuente: str) -> list[str]:
         if not re.search(r"CVSS[^.\n]{0,60}(?<!\d)" + re.escape(normalized) + r"(?!\d)", fuente.replace(",", "."), re.I):
             errores.append(f"puntaje CVSS {valor} sin respaldo asociado a CVSS en la fuente")
     for version in set(re.findall(r"\b\d+\.\d+\.\d+(?:\.\d+)?\b", visible)):
-        if not re.search(r"(?<![\d.])" + re.escape(version) + r"(?![\d.])", fuente):
+        if not re.search(r"(?<![\d.])" + re.escape(version) + r"(?!\d|\.\d)", fuente):
             errores.append(f"la versión {version} no aparece en la fuente")
     if any(not cita_presente(c, fuente) for c in a.evidencias):
         errores.append("evidencias: usa citas literales de 10–300 caracteres o IDs válidos")
@@ -155,10 +184,13 @@ def errores_contra_fuente(a: AnalisisAlerta, fuente: str) -> list[str]:
             r"(?:public|released|published)[^.]{0,70}(?:exploit|proof.of.concept)|"
             r"(?:exploit|proof.of.concept)[^.]{0,70}(?:public|released|published)", a.evidencia_explotacion, re.I):
         errores.append("exploit_publico requiere una cita que confirme la publicación del exploit")
-    if a.severidad == "critical" and a.estado_explotacion != "explotacion_activa" and not re.search(
-            r"unauthenticated[^.\n]{0,100}remote code execution|remote code execution[^.\n]{0,100}unauthenticated",
-            fuente, re.I):
+    rce_sin_auth = rce_sin_autenticacion_respaldada(fuente, a.cves)
+    if a.severidad == "critical" and a.estado_explotacion != "explotacion_activa" and not rce_sin_auth:
         errores.append("severidad critical sin explotación confirmada ni RCE sin autenticación; usa high")
+    if a.tipo_noticia == "vulnerabilidad" and rce_sin_auth and a.severidad != "critical":
+        errores.append("severidad: hay ejecución remota con ruta sin autenticación respaldada para los CVEs elegidos; usa critical conservando las condiciones de módulos/configuración")
+    if re.search(r"\b(?:RCE|SSRF|XSS|CSRF|IOC)\b|\bCVE-\d", a.portada_titulo, re.I):
+        errores.append("portada_titulo: evita siglas técnicas; usa producto + situación o acción útil para el lector")
     if a.estado_explotacion != "explotacion_activa" and re.search(r"explotación activa|ataques confirmados", visible, re.I):
         errores.append("Texto afirma explotación activa pero el estado no coincide")
     if a.temporalidad == "historica" and re.search(r"\b(?:hoy|actualmente|está siendo|están siendo)\b", visible, re.I):
@@ -223,6 +255,10 @@ Clasifica tipo_noticia: vulnerabilidad, incidente o riesgo_operativo.
 Gancho útil, no alarmista. resumen_hallazgo explica lo esencial. hecho_documentado
 aporta el suceso, a_quien_concierne condiciones y roles, detalle_analisis explica
 el mecanismo o práctica, lo_que_no_podemos_concluir delimita sin repetir otra slide.
+El título debe ser accesible sin conocimientos técnicos: producto + pregunta o
+acción útil. No uses RCE, SSRF, XSS, IOC ni identificadores CVE en el gancho.
+Ejemplo: '¿Tu sitio usa Drupal? Revisa este fallo crítico'. Explica ejecución
+remota de código con palabras completas en el cuerpo cuando corresponda.
 nota_vigencia distingue la fecha del informe de la actividad del ataque. Un hecho
 histórico puede tener explotación confirmada: no lo niegues por ser histórico.
 estado_explotacion sin_evidencia exige una negación explícita de la fuente; si
@@ -254,8 +290,13 @@ caption termina con pregunta, sin hashtags ni fuentes; hashtags 3–5 con # inic
 por ejemplo ["#Ciberseguridad", "#InfoSec", "#CyberPulse"]. No hay hilo_x:
 el código lo deriva. Severidad crítica solo con explotación confirmada o RCE sin
 autenticación respaldada. Fuentes hipotéticas/patrocinadas: es_relevante=false.
-La severidad editorial no tiene que copiar 'critical' del titular: elige high si
-no puedes respaldar explotación activa o RCE sin autenticación en una cita clara.
+La severidad editorial no copia automáticamente 'critical' del titular. Usa
+critical cuando la fuente documente ejecución remota de código y una ruta sin
+autenticación para los mismos CVEs, aunque lo explique en párrafos distintos o
+requiera módulos contribuidos/configuración específica. Conserva esas condiciones
+en el detalle; no lo conviertas en explotación activa ni riesgo para todo sitio.
+Expresiones 'requires no authentication' y 'does not require authentication'
+también acreditan esa ruta. Si falta respaldo, usa high.
 Las fechas de recomendaciones previas se narran en pasado: no pidas actualizar
 'antes del 14' como una fecha futura si el artículo ya es posterior a ese día.
 No repitas frases entre slides. Apunta al 85% de estos techos: {limites}.

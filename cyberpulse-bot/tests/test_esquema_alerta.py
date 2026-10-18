@@ -255,3 +255,46 @@ def test_identificadores_completos_no_coinciden_por_prefijo(valor, fuente, esper
     assert identificador_presente(valor, fuente) is esperado
     if esperado:
         assert valor in IDENTIFICADOR.findall(fuente)
+
+
+@pytest.mark.parametrize("ruta,esperado", [
+    ("At least one known exploit path does not require authentication.", True),
+    ("At least one known exploit path requires no authentication.", True),
+    ("All exploit paths require authentication.", False),
+    ("The flaw is not exploitable without authentication.", False),
+])
+def test_rce_condicional_en_parrafos_separados(ruta, esperado):
+    from app.alertas_v3 import rce_sin_autenticacion_respaldada
+    fuente = ("CVE-2026-12345 enables remote code execution in a CMS module.\n"
+              "The flaw is not directly exploitable with core alone; contributed modules expose it. " + ruta)
+    assert rce_sin_autenticacion_respaldada(fuente, ["CVE-2026-12345"]) is esperado
+
+
+def test_no_asocia_rce_de_un_cve_con_sin_autenticacion_de_otro():
+    from app.alertas_v3 import rce_sin_autenticacion_respaldada
+    fuente = ("CVE-2026-12345 allows remote code execution with authenticated access.\n"
+              "CVE-2026-56789 exposes information and does not require authentication.")
+    assert not rce_sin_autenticacion_respaldada(fuente, ["CVE-2026-12345"])
+
+
+def test_rce_sin_autenticacion_condicional_no_se_rebaja_por_falta_de_ataques():
+    fuente = (FUENTE + "\nCVE-2026-12345 allows remote code execution.\n"
+              "CVE-2026-12345 requires contributed modules; one path does not require authentication.")
+    datos = valido(estado_explotacion="desconocido", evidencia_explotacion="",
+                   nota_vigencia="La fuente no determina si el fallo se ha utilizado en ataques.")
+    assert errores_contra_fuente(AnalisisAlerta(**datos), fuente) == []
+    datos["severidad"] = "high"
+    assert any("usa critical" in e for e in errores_contra_fuente(AnalisisAlerta(**datos), fuente))
+
+
+@pytest.mark.parametrize("titulo", ["Vulnerabilidades RCE en Drupal", "CVE-2026-12345 en Acme"])
+def test_gancho_rechaza_siglas_sin_contexto(titulo):
+    assert any("portada_titulo" in e for e in errores_contra_fuente(
+        AnalisisAlerta(**valido(portada_titulo=titulo)), FUENTE))
+
+
+@pytest.mark.parametrize("version_fuente,esperado", [("3.0.10.", True), ("3.0.100.", False), ("3.0.10.1.", False)])
+def test_version_con_punto_final_no_se_confunde_con_prefijo(version_fuente, esperado):
+    a = AnalisisAlerta(**valido(detalle_analisis="El módulo tiene corrección en la versión 3.0.10."))
+    errores = errores_contra_fuente(a, FUENTE + " Fixed version " + version_fuente)
+    assert (not any("versión 3.0.10" in e for e in errores)) is esperado
