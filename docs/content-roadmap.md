@@ -11,6 +11,11 @@ completo se producen después de revisar la apertura.
 
 ## Orden de trabajo
 
+Nueva serie aprobada para preparar un piloto: [CyberPulse Lab / 001](content/cyberpulse-lab-git-history.md),
+demostración local de una credencial ficticia que permanece en un commit anterior.
+El primer montaje es sin voz para revisión. Se suma a las otras series; no desplaza
+las alertas ni cambia automáticamente las fechas de paquetería.
+
 1. Consolidar alertas diarias con opción A y revisar el cambio antes de activarlo.
 2. Producir el reel educativo de mensaje de paquetería: guion, animatic de cinco
    segundos, revisión, voz y exportación de 25–30 segundos aproximadamente.
