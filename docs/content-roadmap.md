@@ -5,7 +5,8 @@
 Las alertas v3 ya están activas. El siguiente bloque es el reel de paquetería,
 la guía breve y el calendario fechado, en [el paquete editorial](content/2026-10-paquetes.md).
 La [vista previa](content/paquetes-preview.html) muestra una apertura muda de cinco
-segundos y el arte de la guía. No están publicados ni programados; la voz y el reel
+segundos y el primer arte de la guía, no aprobado. La [propuesta editorial v2](content/paquetes-editorial-v2.html)
+lo sustituye para revisión, sin borrar el historial. No están publicados ni programados; la voz y el reel
 completo se producen después de revisar la apertura.
 
 ## Orden de trabajo

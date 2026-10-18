@@ -3,6 +3,12 @@
 Estado: borrador para revisión, sin publicar ni programar. Preparado 18/10/2026.
 Serie: Conceptos en claro. No es una noticia ni una campaña activa confirmada.
 
+Actualización visual tras las referencias de Josua: la propuesta vigente de guía
+es [editorial v2](paquetes-editorial-v2.html), acompañada de un carrusel educativo
+de cuatro slides. La primera guía no fue aprobada y se conserva solo como historial.
+Ver [criterios de las cuatro referencias](referencias-y-criterios-instagram.md).
+El guion y las fechas siguientes siguen pendientes de revisión; no hay programación.
+
 ## Objetivo y prueba
 
 Enseñar una sola conducta: comprobar el pedido fuera del mensaje recibido.
