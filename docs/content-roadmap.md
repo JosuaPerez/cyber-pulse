@@ -1,5 +1,13 @@
 # CyberPulse · hoja de ruta editorial propuesta
 
+## Paquete de revisión actual · 18/10/2026
+
+Las alertas v3 ya están activas. El siguiente bloque es el reel de paquetería,
+la guía breve y el calendario fechado, en [el paquete editorial](content/2026-10-paquetes.md).
+La [vista previa](content/paquetes-preview.html) muestra una apertura muda de cinco
+segundos y el arte de la guía. No están publicados ni programados; la voz y el reel
+completo se producen después de revisar la apertura.
+
 ## Orden de trabajo
 
 1. Consolidar alertas diarias con opción A y revisar el cambio antes de activarlo.
