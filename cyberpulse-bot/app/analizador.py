@@ -30,6 +30,7 @@ MAX_CHARS_FUENTE = 6000
 MARGEN_PROMPT = 0.85
 
 NOMBRES_FUENTE = {
+    "sansec.io": "Sansec",
     "thehackernews.com": "The Hacker News",
     "bleepingcomputer.com": "BleepingComputer",
     "krebsonsecurity.com": "Krebs on Security",
@@ -256,7 +257,7 @@ def _resumir_errores(e: ValidationError) -> str:
 
 
 # ---------------------------------------------------------------- principal ---
-def analizar_noticia(client, noticia: dict, modelo: str = MODELO) -> dict:
+def analizar_noticia(client, noticia: dict, modelo: str = MODELO, *, auditoria: list | None = None) -> dict:
     """Devuelve un dict con el formato que ya usa el bot (slide_1..slide_5, caption)
     más 'hilo_x' y 'meta'.
 
@@ -284,8 +285,12 @@ def analizar_noticia(client, noticia: dict, modelo: str = MODELO) -> dict:
     correccion = ""
     ultimo_error = "desconocido"
     for intento in range(1, MAX_INTENTOS + 1):
+        registro = {"intento": intento, "modelo": modelo, "estado": "pendiente"}
+        if auditoria is not None:
+            auditoria.append(registro)
         try:
             resp = client.models.generate_content(model=modelo, contents=contenido + correccion, config=config)
+            registro["respuesta"] = resp.text
             if not resp.text:
                 raise ValueError("respuesta vacía del modelo")
 
@@ -329,18 +334,23 @@ def analizar_noticia(client, noticia: dict, modelo: str = MODELO) -> dict:
                 resultado["caption"] = f"{e.caption.strip()}\n\nFuente: {nombre_fuente(url)}\n{url}\n\n{' '.join(analisis.hashtags)}"
                 resultado["hilo_x"] = [f"{e.gancho}\n{e.resumen}", e.detalle,
                                         f"{e.acciones[0].texto}\n\nFuente: {url}"]
+            registro["estado"] = "validado"
             return resultado
 
         except NoticiaDescartada:
+            registro["estado"] = "descartado"
             raise
         except ValueError as e:  # incluye pydantic.ValidationError: el problema es el contenido
             ultimo_error = _resumir_errores(e) if isinstance(e, ValidationError) else str(e)
+            registro.update(estado="rechazado", motivo=ultimo_error)
             log.warning("Intento %d/%d rechazado: %s", intento, MAX_INTENTOS, ultimo_error)
             correccion = (
                 "\n\nTu respuesta anterior fue RECHAZADA por estos motivos. "
                 f"Genera el JSON completo de nuevo corrigiéndolos:\n{ultimo_error}"
             )
         except Exception as e:  # red, cuota, 503...: el problema es el servicio
+            # No guardar excepciones del proveedor: pueden incluir detalles de credenciales.
+            registro.update(estado="error_api", tipo_error=type(e).__name__)
             ultimo_error = f"error de API: {e}"
             log.warning("Intento %d/%d falló: %s", intento, MAX_INTENTOS, e)
             if intento < MAX_INTENTOS:

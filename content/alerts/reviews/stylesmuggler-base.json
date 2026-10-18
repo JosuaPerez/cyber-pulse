@@ -1,0 +1,9 @@
+{
+  "meta": {
+    "familia": "alerta",
+    "severidad": "critical",
+    "estado_explotacion": "explotacion_activa",
+    "cves": ["CVE-2026-75650"],
+    "origen": "Edición editorial solicitada; explotación documentada en septiembre de 2026"
+  }
+}

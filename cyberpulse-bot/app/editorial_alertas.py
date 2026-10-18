@@ -62,7 +62,7 @@ def cita_presente(cita: str, fuente: str) -> bool:
 # quedan para revisión; mencionar un ataque no respalda una recomendación.
 CONTROLES = (
     r"bloqueador\w*.*(?:anuncio|publicidad)|ad[- ]?block\w*",
-    r"actualiz\w*|parche\w*|updat\w*|patch\w*",
+    r"actualiz\w*|parche\w*|updat\w*|patch\w*|\bhotfix(?:es)?\b|\bfix(?:es)?\b",
     r"copia\w* de seguridad|respald\w*|backups?",
     r"autenticación multifactor|doble factor|multifactor|two[- ]factor|\bMFA\b",
     r"ayuda especializada|expert help|specialist support",
@@ -72,9 +72,9 @@ CONTROLES = (
     r"retención de datos|data retention",
 )
 RECOMENDACION = re.compile(
-    r"\b(recommend\w*|should|must|advis\w*|urge\w*|use|install|enable|apply|"
+    r"\b(recommend\w*|should|must|advis\w*|urge\w*|use|install|enable|apply|keep|"
     r"recomienda\w*|debe\w*|aconseja\w*|usa|instala|activa|aplica)\b", re.IGNORECASE)
-NEGACION = re.compile(r"\b(not|never|without|cannot|no|nunca|sin)\b|n't\b", re.IGNORECASE)
+NEGACION = re.compile(r"\b(not|never|without|cannot|no|nunca|sin)\b|n['’]t\b", re.IGNORECASE)
 CONSULTAS = {
     "administradores": "Consulta el aviso y verifica con tu equipo qué medidas corresponden a tu entorno.",
     "personas": "Consulta la fuente o pide ayuda al proveedor antes de asumir que estás afectado.",
@@ -89,12 +89,15 @@ CONSULTAS_ADICIONALES = {
 
 def respaldo_accion(texto: str, evidencia: str) -> bool:
     """Solo admite familias conocidas con recomendación explícita, sin negación."""
-    if NEGACION.search(evidencia) or not RECOMENDACION.search(evidencia):
+    if NEGACION.search(texto) or not RECOMENDACION.search(evidencia):
         return False
     controles = [p for p in CONTROLES if re.search(p, texto, re.IGNORECASE)]
+    # Una negación sobre Composer no invalida otra oración que recomienda un parche.
+    # Se mantienen juntas las cláusulas de una oración para no perder su negación.
     frases = re.split(r"(?<=[.!?;])\s+|\n+", evidencia)
     return bool(controles) and all(
-        any(RECOMENDACION.search(frase) and re.search(p, frase, re.IGNORECASE) for frase in frases)
+        any(not NEGACION.search(frase) and RECOMENDACION.search(frase)
+            and re.search(p, frase, re.IGNORECASE) for frase in frases)
         for p in controles)
 
 

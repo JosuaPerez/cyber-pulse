@@ -33,10 +33,11 @@ def main():
         timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     output.mkdir(parents=True, exist_ok=False)
     config.IMAGENES_DIR = output
+    auditoria = []
     try:
         with genai.Client(api_key=config.GEMINI_API_KEY) as client:
             data = analizar_noticia(client, {"title": args.title, "link": args.url, "summary": ""},
-                                    modelo=config.GEMINI_MODEL)
+                                    modelo=config.GEMINI_MODEL, auditoria=auditoria)
         data["meta"]["fuente_nombre"] += " · REVISIÓN SIN PUBLICAR"
         (output / "analisis.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         paths = generar_imagenes_carrusel(data, variante_alerta="clara")
@@ -54,6 +55,8 @@ def main():
         print("Visual:", data["meta"].get("visual_apoyo", {}).get("tipo", "ninguno"))
     finally:
         config.IMAGENES_DIR = previous_dir
+        (output / "intentos.json").write_text(
+            json.dumps(auditoria, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":

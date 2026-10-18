@@ -6,6 +6,42 @@ from app.editorial_alertas import EditorialAlerta, errores_editoriales, visual_e
 from app.generador import construir_alerta_clara
 from test_analizador import analisis_valido, TEXTO_FUENTE, ClienteFalso, NOTICIA
 from app import analizador
+from app.editorial_alertas import respaldo_accion
+
+
+@pytest.mark.parametrize("texto,cita,esperado", [
+    ("Conserva el hotfix VULN-39341.", "You need both, so keep the September VULN-39341 hotfix in place as well.", True),
+    ("Aplica el parche de octubre.", "A plain install isn't enough. Administrators must apply the October patch.", True),
+    ("Aplica el parche de octubre.", "Administrators must not apply the October patch.", False),
+    ("Aplica el parche de octubre.", "We don’t recommend installing this patch.", False),
+    ("Aplica el parche de octubre.", "The patch fixes the vulnerability.", False),
+    ("Aplica el parche de octubre.", "Researchers recommend backups. The patch fixes the vulnerability.", False),
+    ("No apliques el parche.", "Administrators must apply the patch.", False),
+])
+def test_respaldo_hotfix_y_negacion_por_oracion(texto, cita, esperado):
+    assert respaldo_accion(texto, cita) is esperado
+
+
+def test_auditoria_conserva_rechazo_y_resultado_validado(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: TEXTO_FUENTE)
+    cliente = ClienteFalso([analisis_valido(editorial=None), analisis_valido()])
+    auditoria = []
+    analizador.analizar_noticia(cliente, NOTICIA, auditoria=auditoria)
+    assert [a["estado"] for a in auditoria] == ["rechazado", "validado"]
+    assert "Falta editorial" in auditoria[0]["motivo"]
+    assert auditoria[0]["respuesta"]
+
+
+def test_auditoria_disponible_aunque_se_agoten_intentos(monkeypatch):
+    monkeypatch.setattr(analizador.app_config, "ALERTAS_VARIANTE", "clara")
+    monkeypatch.setattr(analizador, "obtener_texto_fuente", lambda n: TEXTO_FUENTE)
+    cliente = ClienteFalso([analisis_valido(editorial=None)] * analizador.MAX_INTENTOS)
+    auditoria = []
+    with pytest.raises(analizador.ErrorAnalisis):
+        analizador.analizar_noticia(cliente, NOTICIA, auditoria=auditoria)
+    assert len(auditoria) == analizador.MAX_INTENTOS
+    assert all(a["estado"] == "rechazado" and a["respuesta"] for a in auditoria)
 
 
 @pytest.mark.parametrize("periodo", ["historica", "vigencia_no_confirmada"])
