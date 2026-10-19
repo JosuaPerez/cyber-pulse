@@ -11,6 +11,10 @@ completo se producen después de revisar la apertura.
 
 ## Orden de trabajo
 
+Guion nuevo aportado por Josua: [Mito vs. mecanismo · sin clic](content/reel-phishing-myth.md).
+Es una pieza educativa general con teléfono animado, no una alerta de campaña.
+Su producción y revisión no implican cambiar el calendario ni publicar automáticamente.
+
 Nueva serie aprobada para preparar un piloto: [CyberPulse Lab / 001](content/cyberpulse-lab-git-history.md),
 demostración local de una credencial ficticia que permanece en un commit anterior.
 El primer montaje es sin voz para revisión. Se suma a las otras series; no desplaza

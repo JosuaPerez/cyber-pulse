@@ -1,0 +1,21 @@
+{
+  "id": "phishing-myth",
+  "series": "Mito vs. mecanismo",
+  "title": "Si no doy clic, no pasa nada",
+  "status": "Borrador educativo para revisión; no publicar automáticamente",
+  "sources": [
+    "https://consumer.ftc.gov/articles/how-recognize-avoid-phishing-scams",
+    "https://consumer.ftc.gov/consumer-alerts/2023/12/scammers-hide-harmful-links-qr-codes-steal-your-information",
+    "https://www.nist.gov/itl/smallbusinesscyber/guidance-topic/phishing"
+  ],
+  "caption": "No abrir enlaces sospechosos ayuda, pero no es la única precaución. Un engaño también puede pedirte abrir un adjunto, entregar datos en una llamada o seguir instrucciones en una web a la que llegaste desde un QR. Antes de actuar, verifica la petición por un canal que ya conozcas: abre por tu cuenta la app oficial o utiliza un contacto previamente verificado, no el que te facilite el mensaje. Escanear un QR no demuestra por sí solo una infección. Los ejemplos de este vídeo son ficticios; no describen una campaña actual. Guarda este recordatorio. Fuentes: https://consumer.ftc.gov/articles/how-recognize-avoid-phishing-scams · https://consumer.ftc.gov/consumer-alerts/2023/12/scammers-hide-harmful-links-qr-codes-steal-your-information · https://www.nist.gov/itl/smallbusinesscyber/guidance-topic/phishing",
+  "scenes": [
+    {"duration": 3, "view": "hook", "headline": "¿SIN CLIC, A SALVO?", "narration": "Si no das clic, ¿estás a salvo? Solo a medias.", "detail": "MITO VS. MECANISMO"},
+    {"duration": 5, "view": "link", "headline": "EVITAR EL ENLACE AYUDA.", "narration": "Evitar enlaces sospechosos reduce el riesgo. Pero no es la única puerta.", "detail": "No es una garantía total."},
+    {"duration": 3, "view": "attachment", "headline": "TAMBIÉN UN ADJUNTO.", "narration": "También pueden engañarte con un archivo adjunto.", "detail": "Ejemplo: te piden abrir un archivo inesperado."},
+    {"duration": 3, "view": "call", "headline": "O UNA LLAMADA.", "narration": "O pedirte datos por teléfono.", "detail": "La petición también puede llegar por voz."},
+    {"duration": 3, "view": "qr", "headline": "O UNA WEB TRAS UN QR.", "narration": "O llevarte a una web falsa desde un QR.", "detail": "Escanear no equivale por sí solo a infección."},
+    {"duration": 6, "view": "verify", "headline": "VERIFICA POR OTRO CANAL.", "narration": "La regla es no actuar ante una petición sin verificarla por otro canal.", "detail": "Abre por tu cuenta la app oficial."},
+    {"duration": 6, "view": "cta", "headline": "NO DENTRO DEL MENSAJE.", "narration": "Guárdalo. Si dudas, verifica por otro canal, no desde el mensaje.", "detail": "O contacta por un medio que ya conoces."}
+  ]
+}
