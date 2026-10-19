@@ -48,7 +48,7 @@ proto-plus==1.28.2
 protobuf==5.29.6
 pyasn1==0.6.4
 pyasn1_modules==0.4.2
-pycparser==3.0
+pycparser==3.11
 pycryptodomex==3.23.0
 pydantic==2.13.5
 pydantic_core==2.46.5
