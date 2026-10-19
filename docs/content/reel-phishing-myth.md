@@ -60,10 +60,33 @@ voz y ajustes coinciden. Un rechazo seguro del adaptador se anota en `timing.jso
 en ese caso se genera solo una vista sin voz identificada como tal. No se usa un
 audio antiguo como si fuera la nueva locución.
 
-Salida en `cyberpulse-bot/media/reels/phishing-myth-v1/`: vista HTML, storyboard,
+Salida actual en `cyberpulse-bot/media/reels/phishing-myth-v2/`: vista HTML, storyboard,
 caption, tiempos y MP4 de revisión 540×960 / 24 fps. Si hay voz, también WAV y MP4
 con audio AAC. La vista HTML incorpora audio y fuentes para reproducirse sin servidor.
 Los textos breves de pantalla son titulares, no una transcripción por palabra.
 
 Revisar voz y duración, lectura móvil, transiciones, precisión y cierre antes de
 exportar la entrega final 1080×1920. Nada se conecta al publicador del bot.
+
+## Pulido visual v2
+
+La carpeta `phishing-myth-v1` conserva el primer montaje para comparar.
+El guion, las fuentes y los 29 segundos provisionales no cambian.
+
+- Cursor cian situado bajo el enlace según su posición real; no cubre sus letras.
+- Se retira «PAUSA», que podía confundirse con un botón de la interfaz.
+- Entrada breve de titulares; teléfono con desplazamiento y acercamiento suaves;
+  documento con micromovimiento; llamada con oscilación; barrido del QR dentro del
+  icono y aparición escalonada de las tarjetas del cierre.
+- Mensaje en superficie marino/cian con la misma familia tipográfica y bordes del
+  resto de las tarjetas, sin el bloque claro de la v1.
+- Disclaimer más contrastado y con fondo propio, separado al menos 24 píxeles
+  del pie en la vista de revisión 540×960. El pie de marca queda en segundo plano.
+- Se conserva el control «SIN VOZ · BORRADOR»: esta NO es la exportación final.
+  Retirarlo solo en una entrega aprobada para publicación, con o sin voz; no retirar
+  los disclaimers editoriales ni presentar tiempos estimados como sincronizados.
+
+El renderer comprueba cursor/enlace y separación del pie cada 0,25 segundos;
+también verifica cambios de movimiento dentro de cada escena y que volver al mismo
+tiempo produzca el mismo estado. Guarda el resultado en `visual-checks.json`.
+No se hace una nueva petición de voz durante este pulido; el límite 429 sigue pendiente.

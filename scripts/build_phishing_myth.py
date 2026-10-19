@@ -91,6 +91,59 @@ def build(output, with_voice=False):
     return script, audio_path
 
 
+def validate_visuals(page, script):
+    """Sample the complete timeline, including late-scene motion and safe text areas."""
+    duration = sum(scene["duration"] for scene in script["scenes"])
+    checked = 0
+    for quarter in range(int(duration * 4)):
+        second = quarter / 4
+        page.evaluate("t => window.renderAt(t)", second)
+        metrics = page.evaluate("""() => {
+            const rect = selector => document.querySelector(selector).getBoundingClientRect();
+            const note = rect('.note'), footer = rect('.footer');
+            const cursor = document.querySelector('#cursor');
+            const c = rect('#cursor'), link = rect('#link');
+            const visible = !cursor.classList.contains('hidden');
+            return {
+                footerGap: footer.top - note.bottom,
+                cursorOverlap: visible && c.left < link.right && c.right > link.left
+                    && c.top < link.bottom && c.bottom > link.top,
+                pauseExists: !!document.querySelector('#pause'),
+                cursorColor: getComputedStyle(cursor).color
+            };
+        }""")
+        assert not metrics["cursorOverlap"], f"Cursor covers link at {second}s"
+        assert not metrics["pauseExists"], "Ambiguous PAUSA control remains"
+        assert metrics["footerGap"] >= 24, f"Disclaimer too close to footer at {second}s"
+        assert metrics["cursorColor"] == "rgb(80, 220, 228)", "Unexpected cursor accent"
+        checked += 1
+    start = 0
+    motion_scenes = []
+    for scene in script["scenes"]:
+        if scene["view"] in {"hook", "link", "verify"}:
+            ids = ["phone"]
+        elif scene["view"] == "cta":
+            ids = ["route", "save"]
+        else:
+            ids = ["icon", "floating", "scan"]
+
+        def signature(second, ids=ids):
+            page.evaluate("t => window.renderAt(t)", second)
+            return page.evaluate("ids => ids.map(id => {const s=document.getElementById(id).style;"
+                                 "return [s.transform,s.top,s.opacity];})", ids)
+
+        first = start + scene["duration"] * .4
+        second = start + scene["duration"] * .8
+        state = signature(first)
+        assert state != signature(second), f"No sustained motion in {scene['view']}"
+        assert state == signature(first), "Timeline is not deterministic when seeking"
+        motion_scenes.append(scene["view"])
+        start += scene["duration"]
+    return {"timeline_samples": checked, "cursor_link_overlap": False,
+            "minimum_footer_gap_px": 24, "continuous_motion_scenes": motion_scenes,
+            "deterministic_seek": True, "ambiguous_pause_removed": True}
+
+
 def render(output, script, audio_path):
     import imageio_ffmpeg
     from moviepy import VideoFileClip
@@ -121,6 +174,7 @@ def render(output, script, audio_path):
             page.goto((output / "preview.html").as_uri())
             page.evaluate("document.fonts.ready")
             stage = page.locator("#stage")
+            visual_checks = validate_visuals(page, script)
             for index, start in enumerate(starts):
                 page.evaluate("t => window.renderAt(t)", start + script["scenes"][index]["duration"] * .65)
                 stage.screenshot(path=str(output / f"scene-{index + 1}.png"))
@@ -157,6 +211,8 @@ def render(output, script, audio_path):
             overview.paste(ImageOps.contain(image.convert("RGB"), (264, 470)),
                            (index * 270 + 3, 5))
     overview.save(output / "storyboard.png")
+    (output / "visual-checks.json").write_text(
+        json.dumps(visual_checks, indent=2), encoding="utf-8")
     print(target, flush=True)
 
 
@@ -165,7 +221,7 @@ def main():
     parser.add_argument("--render", action="store_true")
     parser.add_argument("--voice", action="store_true", help="Use configured Gemini TTS; consumes quota")
     args = parser.parse_args()
-    output = ROOT / "cyberpulse-bot/media/reels/phishing-myth-v1"
+    output = ROOT / "cyberpulse-bot/media/reels/phishing-myth-v2"
     script, audio_path = build(output, args.voice)
     if args.render:
         render(output, script, audio_path)
