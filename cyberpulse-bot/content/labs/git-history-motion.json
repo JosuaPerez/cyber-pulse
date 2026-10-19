@@ -1,0 +1,11 @@
+{
+  "id": "git-history-motion-v2",
+  "status": "Animatic sin voz; tiempos provisionales, no subtítulos sincronizados",
+  "scenes": [
+    {"duration": 4, "label": "EL ARCHIVO", "title": "Borraste la clave.", "accent": "¿Seguro?", "narration": "Borraste la clave. ¿Seguro que desapareció?"},
+    {"duration": 7, "label": "EL HISTORIAL", "title": "Del archivo, sí.", "accent": "Del historial, no.", "narration": "Del archivo actual, sí. Pero Git guarda versiones anteriores. Mira lo que pasa al volver una atrás."},
+    {"duration": 8, "label": "LA COMPROBACIÓN", "title": "Esta versión", "accent": "todavía la conserva.", "narration": "La clave sigue en ese commit. Este valor es ficticio. Borrar la línea en otro commit no borra el pasado."},
+    {"duration": 7, "label": "SI QUEDÓ EXPUESTA", "title": "Revoca o rota la clave.", "accent": "Borrar no basta.", "narration": "Si una clave real quedó expuesta, revócala o rótala. Después revisa el historial y sus copias con tu equipo."},
+    {"duration": 3, "label": "CYBERPULSE LAB", "title": "Antes de subir código…", "accent": "Revisa qué compartes.", "narration": "Guárdalo para tu próximo proyecto."}
+  ]
+}

@@ -1,6 +1,7 @@
 # CyberPulse Lab / 001 · Borraste la clave. ¿Y el historial?
 
 Estado: guion y primer montaje SIN VOZ para revisión. No publicado ni programado.
+La siguiente iteración es el [animatic con movimiento real / v2](cyberpulse-lab-motion.md).
 Serie adicional a las alertas y a «Conceptos en claro», no reemplaza la paquetería.
 Duración de montaje: 27 s; la voz final puede requerir ajustar estos tiempos.
 
