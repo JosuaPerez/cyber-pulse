@@ -4,6 +4,7 @@ import json
 import logging
 import math
 import os
+import copy
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -86,13 +87,47 @@ def load_script(path=SCRIPT):
                     raise ValueError(f"Falta texto de escena: {key}")
             visual_keys = ("visual_title", "visual_detail") if scene["view"] in {
                 "attachment", "call", "qr"
-            } else ("options",) if scene["view"] == "cta" else ("phone_title", "message", "link")
+            } else ("follow",) if scene["view"] == "cta" else ("phone_title", "message", "link")
             if any(not isinstance(scene.get(k), str) or not scene[k].strip()
                    for k in visual_keys):
                 raise ValueError("Faltan textos visuales de la escena en la configuración")
+            extra = {"attachment": ("filename", "permission"), "qr": ("example_url",)}
+            if any(not scene.get(k) for k in extra.get(scene["view"], ())):
+                raise ValueError("Faltan elementos de la escena específica")
+            if scene["view"] == "qr":
+                from urllib.parse import urlsplit
+
+                host = urlsplit("https://" + scene["example_url"]).hostname or ""
+                if not host.endswith(".invalid"):
+                    raise ValueError("La URL ficticia debe usar el dominio reservado .invalid")
         if not 17 <= sum(s["duration"] for s in scenes) <= 21:
             raise ValueError("El guion debe durar entre 17 y 21 segundos")
-        return script
+        return number_scenes(script)
     except (OSError, ValueError, KeyError, TypeError):
         LOGGER.error("No se pudo cargar un guion válido desde %s", path)
+        raise
+
+
+def number_scenes(script):
+    """Deriva toda numeración del orden de las escenas de trampa."""
+    try:
+        data = copy.deepcopy(script)
+        traps = [s for s in data["scenes"] if s["view"] in {"attachment", "call", "qr"}]
+        if len(traps) != 3:
+            raise ValueError("Este piloto requiere tres trampas")
+        for number, scene in enumerate(traps, start=1):
+            if not scene.get("option_label"):
+                raise ValueError("Cada trampa necesita option_label")
+            scene["trap_number"] = number
+            scene["trap_total"] = len(traps)
+        options = " · ".join(f"{s['trap_number']} {s['option_label']}" for s in traps)
+        choices = ", ".join(str(s["trap_number"]) for s in traps[:-1])
+        choices += f" o {traps[-1]['trap_number']}"
+        for scene in data["scenes"]:
+            if scene["view"] == "cta":
+                scene["options"] = options
+                scene["question"] = f"{scene['detail']} {choices}"
+        return data
+    except (KeyError, TypeError, ValueError):
+        LOGGER.error("No se pudo derivar numeración coherente desde las escenas")
         raise

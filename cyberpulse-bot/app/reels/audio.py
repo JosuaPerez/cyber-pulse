@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from importlib.metadata import version
 
 from app.voz_educativa import generar_escenas
 
@@ -33,8 +34,8 @@ def prepare_audio(script, output, settings):
             ])
             resources.append(mixed)
         else:
-            LOGGER.info("Generando %d escenas con Edge TTS (%s)",
-                        len(script["scenes"]), settings.voice)
+            LOGGER.info("Generando %d escenas con Edge TTS %s (%s)",
+                        len(script["scenes"]), version("edge-tts"), settings.voice)
             async def request_voice():
                 return await asyncio.wait_for(generar_escenas(
                     [s["narration"] for s in script["scenes"]], output / "voice-cache",

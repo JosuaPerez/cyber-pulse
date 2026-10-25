@@ -3,6 +3,7 @@
 import argparse
 import json
 import logging
+import shutil
 from dataclasses import replace
 from pathlib import Path
 
@@ -45,6 +46,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--render", action="store_true")
     parser.add_argument("--voice", action="store_true", help="Compatibilidad: REEL_AUDIO=voice")
+    parser.add_argument("--compare", action="store_true",
+                        help="Genera portada y versiones none/voice en una sola ejecución")
     parser.add_argument("--script", type=Path, default=SCRIPT)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
@@ -52,11 +55,28 @@ def main():
         settings = Settings.from_env()
         if args.voice:
             settings = replace(settings, audio="voice")
-        output = args.output or ROOT / f"media/reels/phishing-myth-v3/{settings.audio}"
-        script, audio = build(output, settings=settings, script_path=args.script)
-        if args.render:
-            render(output, script, audio, settings)
-        LOGGER.info("Vista previa: %s", output / "preview.html")
+        base = args.output or ROOT / "media/reels/phishing-myth-v4"
+        modes = ["none", "voice"] if args.compare else [settings.audio]
+        comparison = {"status": "pending", "outputs": {}}
+        if args.compare:
+            base.mkdir(parents=True, exist_ok=True)
+            (base / "comparison.json").write_text(json.dumps(comparison), encoding="utf-8")
+        for mode in modes:
+            active = replace(settings, audio=mode)
+            output = base / mode
+            script, audio = build(output, settings=active, script_path=args.script)
+            if args.render or args.compare:
+                render(output, script, audio, active)
+                comparison["outputs"][mode] = {
+                    "video": str(output / f"reel-{mode}.mp4"),
+                    "duration": sum(s["duration"] for s in script["scenes"]),
+                }
+            LOGGER.info("Vista previa: %s", output / "preview.html")
+        if args.compare:
+            shutil.copyfile(base / "none/cover.png", base / "cover.png")
+            comparison["status"] = "complete_pending_editorial_review"
+            (base / "comparison.json").write_text(
+                json.dumps(comparison, indent=2), encoding="utf-8")
     except ValueError as error:
         LOGGER.error("Reel no generado: %s", error)
         raise SystemExit(1) from None

@@ -4,6 +4,7 @@ import base64
 import copy
 import json
 import logging
+from io import BytesIO
 
 from .settings import ROOT
 
@@ -83,23 +84,67 @@ def validate_visuals(page, script, settings):
             samples += 1
         page.evaluate("window.renderAt(0)")
         first = page.locator("#stage").screenshot()
-        page.evaluate("t => window.renderAt(t)", duration - 1 / settings.fps)
+        # El exportador usa exactamente duration para el último frame del fundido.
+        page.evaluate("t => window.renderAt(t)", duration)
         last = page.locator("#stage").screenshot()
         if first != last:
             raise ValueError("El último fotograma no coincide con el inicial")
-        # Cada ventana de 1.5s contiene un cambio de movimiento, también dentro de escenas.
-        for half in range(int((duration - 1.5) * 2)):
-            t = half / 2
-            states = []
-            for moment in (t, t + .375, t + .75, t + 1.125):
-                page.evaluate("t => window.renderAt(t)", moment)
-                states.append(page.evaluate("""() => ['phone','floating','icon','save'].map(id=>{
-                    const el=document.getElementById(id);return [el.style.transform,
-                    el.getClientRects().length?1:0];})"""))
-            if all(s == states[0] for s in states[1:]):
-                raise ValueError(f"Ventana estática de 1.5s en {t}s")
+        motion = sample_motion(page, script, settings)
         return {"timeline_samples": samples, "safe_layout": settings.layout(),
-                "loop_frame_equal": True, "max_static_window_seconds": 1.5}
+                "loop_frame_equal": True, "motion": motion}
     except Exception:
         LOGGER.error("Falló la comprobación visual del reel")
+        raise
+
+
+def sample_motion(page, script, settings):
+    """Compara píxeles cada 0.5s, excluyendo el pie y la barra de progreso."""
+    from PIL import Image, ImageChops, ImageStat
+
+    try:
+        duration = sum(s["duration"] for s in script["scenes"])
+        previous = None
+        still = maximum = 0
+        differences = []
+        layout = settings.layout()
+        for index in range(int(duration * 2) + 1):
+            page.evaluate("t => window.renderAt(t)", index / 2)
+            with Image.open(BytesIO(page.locator("#stage").screenshot())) as raw:
+                frame = raw.crop((64, layout["top"], 1016, layout["bottom"] - 70))
+                frame = frame.resize((238, 276)).convert("L")
+            if previous is not None:
+                difference = ImageStat.Stat(ImageChops.difference(frame, previous)).mean[0]
+                differences.append(round(difference, 5))
+                still = still + .5 if difference <= .025 else 0
+                maximum = max(maximum, still)
+                if still >= 1.5:
+                    raise ValueError(f"Fotogramas estáticos durante {still}s en {index / 2}s")
+            previous = frame
+        return {"sample_interval_seconds": .5, "pixel_mean_differences": differences,
+                "max_static_seconds": maximum, "footer_and_progress_excluded": True}
+    except Exception:
+        LOGGER.error("Falló el muestreo de fotogramas cada 0.5 segundos")
+        raise
+
+
+def write_cover(page, output, settings):
+    try:
+        page.evaluate("window.renderCover()")
+        issues = page.evaluate("""({top,bottom})=>{
+            const s=document.querySelector('#stage').getBoundingClientRect();
+            return [...document.querySelectorAll('[data-cover-safe]')].some(el=>{
+                const r=el.getBoundingClientRect();return r.top-s.top<top||
+                    r.bottom-s.top>bottom||r.left-s.left<60||s.right-r.right<60||
+                    el.scrollHeight>el.clientHeight+1;
+            });
+        }""", settings.layout())
+        if issues:
+            raise ValueError("Portada fuera de zona segura o con texto desbordado")
+        target = output / "cover.png"
+        page.locator("#stage").screenshot(path=str(target))
+        page.evaluate("window.renderAt(0)")
+        LOGGER.info("Portada nativa 1080×1920: %s", target)
+        return target
+    except Exception:
+        LOGGER.error("No se pudo generar una portada válida")
         raise

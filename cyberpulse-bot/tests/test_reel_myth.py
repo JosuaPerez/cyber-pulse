@@ -2,6 +2,7 @@
 
 import copy
 import os
+import json
 from dataclasses import replace
 from unittest.mock import AsyncMock
 
@@ -11,7 +12,7 @@ from moviepy import AudioClip, AudioFileClip
 
 from app.reels.audio import prepare_audio
 from app.reels.myth import build
-from app.reels.settings import Settings, load_script
+from app.reels.settings import Settings, load_script, number_scenes
 
 
 def test_safe_defaults_and_invalid_modes(monkeypatch):
@@ -26,6 +27,56 @@ def test_safe_defaults_and_invalid_modes(monkeypatch):
                    {"audio": "bad"}, {"audio": "music"}):
         with pytest.raises(ValueError):
             Settings(**kwargs)
+
+
+def test_numbering_follows_scene_order_not_textual_offsets():
+    data = load_script()
+    traps = [s for s in data["scenes"] if s["view"] in {"attachment", "call", "qr"}]
+    assert [s["trap_number"] for s in traps] == [1, 2, 3]
+    assert data["scenes"][0]["phone_title"] == "SMS"
+    assert data["scenes"][-1]["options"] == "1 adjunto · 2 llamada · 3 QR"
+    assert data["scenes"][-1]["question"].endswith("1, 2 o 3")
+    data["scenes"][1], data["scenes"][2] = data["scenes"][2], data["scenes"][1]
+    numbered = number_scenes(data)
+    assert numbered["scenes"][1]["trap_number"] == 1
+    assert numbered["scenes"][-1]["options"] == "1 llamada · 2 adjunto · 3 QR"
+
+
+def test_qr_real_domains_are_rejected(tmp_path):
+    import json
+
+    data = load_script()
+    data["scenes"][3]["example_url"] = "example.com/datos"
+    path = tmp_path / "script.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(ValueError, match="invalid"):
+        load_script(path)
+
+
+def test_compare_generates_both_modes_and_cover(monkeypatch, tmp_path):
+    """Contrato del comando único; la codificación real se prueba aparte."""
+    from app.reels import myth
+
+    calls = []
+
+    def fake_build(output, **kwargs):
+        output.mkdir(parents=True, exist_ok=True)
+        return load_script(), None
+
+    def fake_render(output, script, audio, settings):
+        calls.append(settings.audio)
+        (output / "cover.png").write_bytes(b"mock-cover")
+        return output / f"reel-{settings.audio}.mp4"
+
+    monkeypatch.setattr(myth, "build", fake_build)
+    monkeypatch.setattr(myth, "render", fake_render)
+    monkeypatch.setattr("sys.argv", ["myth", "--compare", "--output", str(tmp_path)])
+    myth.main()
+    result = json.loads((tmp_path / "comparison.json").read_text())
+    assert calls == ["none", "voice"]
+    assert set(result["outputs"]) == {"none", "voice"}
+    assert result["status"] == "complete_pending_editorial_review"
+    assert (tmp_path / "cover.png").read_bytes() == b"mock-cover"
 
 
 def test_build_is_offline_and_caption_contains_sources(tmp_path):

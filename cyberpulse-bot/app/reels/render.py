@@ -8,7 +8,7 @@ import shutil
 import subprocess
 from fractions import Fraction
 
-from .preview import validate_visuals
+from .preview import validate_visuals, write_cover
 from .settings import HEIGHT, WIDTH
 
 LOGGER = logging.getLogger(__name__)
@@ -113,7 +113,9 @@ def render(output, script, audio_path, settings):
                                     device_scale_factor=1)
             page.goto((output / "preview.html").resolve().as_uri())
             page.evaluate("document.fonts.ready")
+            page.evaluate("window.prepareLoop()")
             checks = validate_visuals(page, script, settings)
+            write_cover(page, output, settings)
             stage = page.locator("#stage")
             elapsed = 0
             for index, scene in enumerate(script["scenes"]):

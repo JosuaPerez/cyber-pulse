@@ -1,16 +1,16 @@
-# Reel Mito vs. mecanismo · versión 3
+# Reel Mito vs. mecanismo · versión 4 (segunda ronda)
 
-Estado: implementado para revisión local, no publicado ni programado. El v2 de 29 s y su HTML original se conservan como historial. El guion activo es ahora el JSON de seis escenas de 19 s.
+Estado: implementado para revisión local, no publicado ni programado. La primera ronda se guardó en el commit 334bb34. El guion tiene seis escenas: 19 s sin audio y aproximadamente 20,9 s con voz real, sin acelerar ni recortar palabras.
 
 ## Arquitectura real y alcance
 
-Este piloto usa HTML autónomo + Playwright, no React/Vite. Se conserva esa arquitectura, sin modificar alertas, carruseles, feed, proveedores compartidos, Dockerfile ni compose. El antiguo script de construcción es ahora una entrada compatible a módulos pequeños en `cyberpulse-bot/app/reels/`:
+Este piloto usa HTML autónomo + Playwright, no React/Vite. Se conserva esa arquitectura, sin modificar alertas, carruseles, feed, proveedores compartidos, Dockerfile de producción ni compose. Se añade Dockerfile.reels, una imagen aislada con Edge TTS 7.3.1 y ffprobe. El script de construcción sigue delegando a módulos pequeños en `cyberpulse-bot/app/reels/`:
 
-- `settings.py`: constantes 1080×1920, carga y validación del JSON, flags y márgenes.
+- `settings.py`: constantes 1080×1920, JSON, flags, márgenes y numeración derivada del orden de trampas; URL ficticia limitada a .invalid.
 - `audio.py`: MoviePy para silencio/mezcla, Edge TTS por escena mediante el adaptador existente. Timeout total de voz: 120 s.
-- `preview.py`: HTML autónomo, fuentes locales, caption y comprobación visual.
+- `preview.py`: HTML autónomo, fuentes locales, caption, portada y comprobación de píxeles cada 0,5 s, sin contar pie ni barra de progreso.
 - `render.py`: capturas nativas a escala 1, codificación FFmpeg y verificación completa.
-- `myth.py`: CLI y coordinación, sin importaciones del publicador.
+- `myth.py`: CLI y comparación none/voice en un comando, sin importaciones del publicador.
 - `check.py`: comprobación técnica de un MP4 existente.
 
 Plantilla activa: `cyberpulse-bot/content/reels/phishing-myth-v3.html`. Fuentes tipográficas locales copiadas del proyecto a `content/reels/fonts/` para que estén dentro del contexto Docker; no se necesitan Vite, CDN ni descargas de fuentes.
@@ -26,9 +26,15 @@ Editar `cyberpulse-bot/content/reels/phishing-myth.json`, lista `scenes`: duraci
 | 5–8 | Llamada que pide datos |
 | 8–11 | QR → web que pide datos; esquema no escaneable |
 | 11–16 | Verifica por otro canal; app oficial y check animado |
-| 16–19 | Guárdalo; pregunta y opciones 1–4 |
+| 16–19 | Guárdalo; pregunta y opciones 1–3 |
 
-Los cambios de escena son cortes; la entrada dura 0,18 s. Hay movimiento continuo de elementos. Los últimos 0,18 s recuperan el estado inicial, y el último frame exportado es idéntico al primero. No se funde una frase de voz con otra: el bucle es visual. El cierre enumera 1 SMS, 2 adjunto, 3 llamada, 4 QR; «Trampa 1–3» enumera solo las tres alternativas al enlace, no las respuestas de la encuesta.
+Entradas con easing de 0,25 s y cortes entre escenas; zoom del fondo del 4 %. El archivo se abre y revela un permiso de macros, la llamada tiene ondas y burbuja, y el QR revela una URL ficticia no navegable. El teléfono mide 720×610 frente a 536×468 anteriores (aproximadamente 1,34×/1,30×); los textos secundarios y el aviso del teléfono tienen al menos 44 px. El bloque principal está centrado dentro de la zona segura con 64 px laterales.
+
+La solución muestra tarjeta, check y después la instrucción. El cierre incorpora marcador, burbuja y seguimiento de la serie. El SMS no tiene número: las tres trampas derivan 1–3 del orden de la lista, también en tarjetas, progreso, cierre y pregunta. No editar números en la plantilla.
+
+Los últimos 0,18 s funden con una copia del estado inicial, preparada después de cargar las fuentes para no desplazar el cursor. El último frame exportado es idéntico al primero. El bucle es visual, sin recortar el audio.
+
+Referencia visual: MP4 proporcionado por Josua correspondiente al reel De4MLZghFbW, de 2:51. Se revisaron fotogramas de todo el video y con más frecuencia la apertura. Se toma la progresión de elementos, diagramas distintos y jerarquía tipográfica como orientación; no se copian texto, datos, música ni afirmaciones sobre XKeyscore.
 
 ## Flags y contrato
 
@@ -57,32 +63,31 @@ Desde la raíz del repositorio:
 
 ```powershell
 .venv/Scripts/python.exe scripts/build_phishing_myth.py --render
-$env:REEL_AUDIO="voice"
-.venv/Scripts/python.exe scripts/build_phishing_myth.py --render
+.venv/Scripts/python.exe scripts/build_phishing_myth.py --compare --render
 ```
 
-Salidas separadas por modo: `cyberpulse-bot/media/reels/phishing-myth-v3/none/`, `voice/`, `music/`. Cada una incluye preview.html, caption.txt, timing.json, escenas PNG, visual-checks.json, verification.json y reel-MODO.mp4 si la verificación termina bien. Los archivos generados no se versionan.
+Salidas separadas por modo: `cyberpulse-bot/media/reels/phishing-myth-v4/none/`, `voice/`, `music/`. Cada una incluye cover.png 1080×1920, preview.html, caption.txt, timing.json, escenas PNG, visual-checks.json, verification.json y reel-MODO.mp4 si la verificación termina bien. --compare genera none y voice secuencialmente, copia la portada a la carpeta base y escribe comparison.json completo solo si ambas terminan. Los archivos generados no se versionan. Para ejecución local con voz se necesita el runtime aislado de app/reels/requirements.txt; no actualizar las dependencias del bot por esta prueba.
 
 ## Docker aislado, sin iniciar el bot
 
 Docker está apagado en la máquina de revisión. No se ha ejecutado dentro de Docker ni se ha arrancado el stack de producción. Cuando Docker esté disponible, ejecutar desde `cyberpulse-bot/`. No usar `docker compose up` para esta prueba.
 
 ```powershell
-docker build -t cyberpulse-reels:local .
-docker run --rm --init --entrypoint python -e DRY_RUN=true -e PUBLICAR_EN_X=false -e REEL_AUDIO=none --mount "type=bind,source=$((Get-Location).Path)/media,target=/bot/media" cyberpulse-reels:local -m app.reels.myth --render
+docker build -f Dockerfile.reels -t cyberpulse-reels:local .
+docker run --rm --init -e DRY_RUN=true -e PUBLICAR_EN_X=false --mount "type=bind,source=$((Get-Location).Path)/media,target=/bot/media" cyberpulse-reels:local --compare --render
 ```
 
-Para voz, usar el mismo comando sustituyendo `-e REEL_AUDIO=none` por `-e REEL_AUDIO=voice`. Requiere acceso de red a Edge TTS; no requiere .env ni credenciales de Meta/Gemini.
+Una vez construida la imagen, la segunda línea es el único comando que regenera portada y ambas versiones. Usa red para Edge TTS, pero no .env ni credenciales de Meta/Gemini. Para un modo aislado, omitir --compare y pasar -e REEL_AUDIO=none o voice antes del nombre de la imagen.
 
-Para música, colocar un archivo propio/autorizado en `media/reels/musica-propia.wav`, sustituir el modo por `-e REEL_AUDIO=music` y agregar `-e REEL_MUSIC_PATH=/bot/media/reels/musica-propia.wav`. No se descarga música ni se distribuye una pista comercial.
+Para música, colocar un archivo propio/autorizado en `media/reels/musica-propia.wav`, omitir --compare y pasar -e REEL_AUDIO=music y -e REEL_MUSIC_PATH=/bot/media/reels/musica-propia.wav antes de la imagen; conservar --render. No se descarga música ni se distribuye una pista comercial.
 
 Verificar una salida sin red ni render:
 
 ```powershell
-docker run --rm --init --entrypoint python --mount "type=bind,source=$((Get-Location).Path)/media,target=/bot/media" cyberpulse-reels:local -m app.reels.check /bot/media/reels/phishing-myth-v3/none/reel-none.mp4 --audio none --duration 19
+docker run --rm --init --entrypoint python --mount "type=bind,source=$((Get-Location).Path)/media,target=/bot/media" cyberpulse-reels:local -m app.reels.check /bot/media/reels/phishing-myth-v4/none/reel-none.mp4 --audio none --duration 19
 ```
 
-Estos comandos sobrescriben la entrada del contenedor y no cargan .env. El Dockerfile normal conserva su CMD de producción; nunca ejecutar esta imagen sin el override para una revisión.
+La imagen Dockerfile.reels arranca únicamente el módulo de reels, también sin override. El Dockerfile normal del bot no cambia. No confundir las dos imágenes ni usar compose de producción para esta revisión.
 
 ## Pruebas y limitaciones reales
 
@@ -90,6 +95,6 @@ Estos comandos sobrescriben la entrada del contenedor y no cargan .env. El Docke
 
 Render de integración opcional, sin servicio TTS: desde cyberpulse-bot, `REEL_EXPORT_TEST=1 python -m pytest tests/test_reel_myth.py -k native_voice` (en PowerShell establecer la variable antes). Usa tonos propios para simular la respuesta del proveedor y comprobar el montaje, no una narración real.
 
-En la prueba de esta iteración, el catálogo de Edge confirmó es-DO-EmilioNeural, pero la síntesis fue rechazada con HTTP 403. No se afirma que la variante de voz real esté aceptada hasta conseguir una síntesis y escucharla. Un montaje de prueba con TTS simulado no acredita que el servicio externo funcione. La prueba de music usa un tono local propio, no una canción lista para publicar.
+La primera ronda con Edge TTS 7.2.8 fallaba con HTTP 403. Se verificó la corrección oficial Sec-MS-GEC v2 (https://github.com/rany2/edge-tts/pull/492) y se probó 7.3.1 en una carpeta aislada; esa versión también queda fijada en la imagen de reels. La síntesis real con es-DO-EmilioNeural funciona. La primera locución completa excedía 21 s; se abreviaron gancho, QR y cierre para mantener la voz a velocidad normal y la explicación completa en pantalla. La salida narrada dura aproximadamente 20,9 s. No se sustituye ninguna voz por tonos ni se cambia de proveedor.
 
-Resultados locales: 231 pruebas de backend pasan, una integración opt-in omitida en la suite normal; esa integración se ejecutó aparte y pasó. Las nueve pruebas de scripts también pasan. Ruff y diff sin errores. Exportaciones none y music: 1080×1920, 19 s, 24 fps, H.264 yuv420p, bitrate de video observado 4,948 Mbps y AAC en music. Verificación visual en 77 tiempos: área segura entre y=269 e y=1440, bucle con igualdad de frames y ventanas de movimiento inferiores a 1,5 s. Si se solicita el mínimo de 4 Mbps, el encoder usa objetivo mínimo de 4,1 Mbps para compensar el arranque del VBV; la aceptación exige medir al menos 4 Mbps reales.
+Resultados locales de segunda ronda: 234 pruebas de backend pasan, una integración opt-in omitida en la suite normal; nueve pruebas de scripts pasan. Salidas reales none/voice: 1080×1920, 19/~20,9 s, 24 fps, H.264 yuv420p, aproximadamente 5 Mbps y AAC en voice. Se comparan píxeles cada 0,5 s, excluyendo pie y progreso; no se detectan intervalos inmóviles de 1,5 s. Se conservan la verificación de decodificación, faststart y área segura. La voz real también se escucha antes de aprobar la publicación: validación técnica no es aprobación editorial ni garantía de calidad subjetiva. Docker sigue apagado; no se afirma ejecución dentro del contenedor.
