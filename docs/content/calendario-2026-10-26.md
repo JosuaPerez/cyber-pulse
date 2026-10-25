@@ -65,6 +65,31 @@ Conservar una sola identidad visual con tipografía e iconos construidos en las 
 
 ## Medición a 24 h, 72 h y 7 días
 
+### Hashtags y audio por publicación
+
+Cada entrega debe incluir caption, hashtags específicos y ficha de audio. Usar inicialmente 3–5 hashtags pertinentes como criterio editorial, no como receta de alcance ni afirmación del límite actual de Instagram. Confirmar el límite que muestre el compositor. No usar #viral, #fyp ni etiquetas ajenas solo por popularidad. Incluir palabras del tema en el texto natural, sin depender de etiquetas para que se entienda la pieza.
+
+| Fecha | Hashtags propuestos | Dirección musical; selección concreta pendiente |
+| --- | --- | --- |
+| 26/10 · sin clic | #Phishing #SeguridadDigital #Ciberseguridad #CyberPulse | Pulso electrónico discreto, sin voz, para mito y explicación |
+| 28/10 · paquetería | #Smishing #EstafasOnline #SeguridadDigital #CyberPulse | Beat suave de curiosidad; no sirenas ni amenaza exagerada |
+| 29/10 · guía de mensajes | #Phishing #PrevencionDeEstafas #SeguridadDigital #CyberPulse | Lo-fi instrumental tranquilo que acompañe la lectura |
+| 30/10 · Git Lab | #Git #DesarrolloSeguro #SeguridadDelCodigo #CyberPulse | Electrónica minimalista con ritmo para la demostración |
+| 02/11 · IA y documentos | #InteligenciaArtificial #ProteccionDeDatos #SeguridadDigital #CyberPulse | Ambiente tecnológico sobrio, sin letras que compitan con la voz |
+| 04/11 · candado | #HTTPS #CertificadosDigitales #SeguridadWeb #CyberPulse | Ambient electrónico de descubrimiento; no tono de catástrofe |
+| 05/11 · motor de la web | #PHP #SeguridadWeb #Actualizaciones #CyberPulse | Instrumental estable, apto para lectura; no música de urgencia si no es alerta vigente |
+| 06/11 · duda / QR | #CodigosQR #PrevencionDeEstafas #SeguridadDigital #CyberPulse | Base ligera con pausa para la comprobación; cambiar etiquetas si cambia el tema |
+
+Son propuestas temáticas, no hashtags medidos ni audios confirmados en tendencia. Para alertas fuera del calendario, elegir etiquetas de producto/tecnología, riesgo concreto y marca, después de verificar la noticia. Las historias no necesitan un bloque repetido de hashtags; escoger audio solo si ayuda al ejemplo.
+
+El día de publicación, revisar desde la cuenta de CyberPulse los audios disponibles y, si aparece, el indicador o sección de tendencias. Preseleccionar 2–3, escuchar el fragmento y mirar usos recientes para descartar letras, bromas o asociaciones que contradigan el tema. No declarar «en tendencia en RD» a partir de una lista global, número acumulado de usos o un audio aislado. Si no hay candidato apropiado o autorización de uso clara, usar música permitida no tendencial, audio propio o solo voz. No cambiar el tipo de cuenta para eludir restricciones.
+
+Ficha antes de aprobar: título exacto, artista/creador, enlace al audio, fecha de consulta, señal observada de tendencia (o «no verificada»), disponibilidad en CyberPulse, uso orgánico/publicitario previsto y permiso aplicable, fragmento e inicio/fin, mezcla probada en móvil. Disponibilidad en la biblioteca no prueba permiso para todo uso comercial, anuncio o republicación en otras plataformas. Revisar condiciones de Meta Sound Collection si se usa como alternativa; no asumir licencias universales.
+
+Guardar un máster con voz limpia y sin música ajena. Si se añade música nativa desde Instagram, hacerlo durante la revisión final; no asumir que el publicador automático del bot admite ese paso. El calendario no configura selección automática ni descarga pistas de terceros. Para reels, mantener voz claramente por delante de la música y comprobar con auriculares y altavoz; para carruseles, permitir lectura sin depender del audio. Registrar pista y volumen relativo en la medición, sin atribuirle causalidad al resultado de una sola pieza.
+
+Referencia sobre acceso y restricciones de la biblioteca: https://www.facebook.com/help/instagram/402084904469945 (consultada 25/10/2026).
+
 Capturar Insights desde la app si la API no entrega las métricas; un error o un campo ausente es N/D, nunca cero. Guardar conteos y denominadores, no solo porcentajes.
 
 | Formato | Indicador principal | Indicadores complementarios |
