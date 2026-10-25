@@ -1,92 +1,95 @@
-# Mito vs. mecanismo · «Si no doy clic, no pasa nada»
+# Reel Mito vs. mecanismo · versión 3
 
-Guion aportado por Josua. Adaptación a voz en off e ilustración animada de teléfono.
-Estado: borrador para revisión, no publicado ni programado. No reemplaza los archivos
-de paquetería o el laboratorio de Git, que siguen disponibles por separado.
+Estado: implementado para revisión local, no publicado ni programado. El v2 de 29 s y su HTML original se conservan como historial. El guion activo es ahora el JSON de seis escenas de 19 s.
 
-## Dos ajustes de precisión
+## Arquitectura real y alcance
 
-- «Evita la mayoría de ataques» pasa a «reduce el riesgo»: no tenemos una fuente
-  que cuantifique esa mayoría ni definimos un conjunto concreto de ataques.
-- El QR representa el acceso a una web falsa y su petición, no una infección
-  automática por apuntar la cámara. El escaneo por sí solo no prueba una infección.
+Este piloto usa HTML autónomo + Playwright, no React/Vite. Se conserva esa arquitectura, sin modificar alertas, carruseles, feed, proveedores compartidos, Dockerfile ni compose. El antiguo script de construcción es ahora una entrada compatible a módulos pequeños en `cyberpulse-bot/app/reels/`:
 
-No se atribuye una campaña, no se añaden víctimas ni cifras de alcance. Se habla de
-engaños que pueden pedir distintas acciones, no de una garantía frente a todo ataque.
+- `settings.py`: constantes 1080×1920, carga y validación del JSON, flags y márgenes.
+- `audio.py`: MoviePy para silencio/mezcla, Edge TTS por escena mediante el adaptador existente. Timeout total de voz: 120 s.
+- `preview.py`: HTML autónomo, fuentes locales, caption y comprobación visual.
+- `render.py`: capturas nativas a escala 1, codificación FFmpeg y verificación completa.
+- `myth.py`: CLI y coordinación, sin importaciones del publicador.
+- `check.py`: comprobación técnica de un MP4 existente.
 
-## Guion adaptado y tiempo objetivo
+Plantilla activa: `cyberpulse-bot/content/reels/phishing-myth-v3.html`. Fuentes tipográficas locales copiadas del proyecto a `content/reels/fonts/` para que estén dentro del contexto Docker; no se necesitan Vite, CDN ni descargas de fuentes.
 
-29 segundos estimados sin voz. Si se genera locución, las duraciones se miden en el
-audio y el montaje las adopta, aunque el resultado salga del objetivo de 25–30 s.
-No se acelera artificialmente una locución para ocultar que no encaja.
+## Escenas editables
 
-| Intervalo provisional | Voz | Visual |
+Editar `cyberpulse-bot/content/reels/phishing-myth.json`, lista `scenes`: duración, tipo visual, titular, narración, detalle y textos del mockup. No hay que tocar Python para cambiar el guion dentro de los tipos visuales admitidos.
+
+| Inicio–fin sin voz | Escena |
+| --- | --- |
+| 0–2 | No hacer clic no siempre te salva; SMS, cursor sin pulsar |
+| 2–5 | Adjunto inesperado |
+| 5–8 | Llamada que pide datos |
+| 8–11 | QR → web que pide datos; esquema no escaneable |
+| 11–16 | Verifica por otro canal; app oficial y check animado |
+| 16–19 | Guárdalo; pregunta y opciones 1–4 |
+
+Los cambios de escena son cortes; la entrada dura 0,18 s. Hay movimiento continuo de elementos. Los últimos 0,18 s recuperan el estado inicial, y el último frame exportado es idéntico al primero. No se funde una frase de voz con otra: el bucle es visual. El cierre enumera 1 SMS, 2 adjunto, 3 llamada, 4 QR; «Trampa 1–3» enumera solo las tres alternativas al enlace, no las respuestas de la encuesta.
+
+## Flags y contrato
+
+| Variable | Valor por defecto | Uso |
 | --- | --- | --- |
-| 0–3 s | Si no das clic, ¿estás a salvo? Solo a medias. | Petición en el teléfono; cursor y pausa, sin pulsar el enlace. |
-| 3–8 s | Evitar enlaces sospechosos reduce el riesgo. Pero no es la única puerta. | Se mantiene la pausa antes de actuar. |
-| 8–11 s | También pueden engañarte con un archivo adjunto. | Un documento entra como alternativa al enlace. |
-| 11–14 s | O pedirte datos por teléfono. | Icono de llamada y petición ficticia de datos. |
-| 14–17 s | O llevarte a una web falsa desde un QR. | Esquema de QR sin destino; no se representa una infección instantánea. |
-| 17–23 s | La regla es no actuar ante una petición sin verificarla por otro canal. | Salir del mensaje y abrir por cuenta propia la app oficial. |
-| 23–29 s | Guárdalo. Si dudas, verifica por otro canal, no desde el mensaje. | Petición recibida → app oficial; cierre con invitación a guardar. |
+| REEL_AUDIO | none | none, voice o music; nunca sustitución silenciosa de un fallo |
+| REEL_DRAFT_LABEL | false | true muestra BORRADOR dentro del área segura |
+| REEL_FPS | 24 | 24 o 30 |
+| REEL_VIDEO_MBPS | 5 | Mínimo 4; CBR con relleno para no exportar texto a 270 kbps |
+| REEL_SAFE_TOP | 0.14 | Margen superior; no puede reducirse por debajo del 14 % |
+| REEL_SAFE_BOTTOM | 0.25 | Margen inferior; no puede reducirse por debajo del 25 % |
+| REEL_VOICE | es-DO-EmilioNeural | Voz española de Edge; no cambia de proveedor |
+| REEL_MUSIC_PATH | sin valor | Archivo local requerido en music |
+| REEL_MUSIC_VOLUME | 0.12 | Ganancia de música, admitida entre 0 y 0.3 |
+| REEL_FFPROBE | detección por PATH | Ruta opcional a ffprobe |
 
-El JSON `cyberpulse-bot/content/reels/phishing-myth.json` contiene narración,
-titulares, fuentes y caption. No usa el renderer del primer reel de contraseñas.
-La ilustración es original; no usa marcas reales, números de teléfono o enlaces activos.
+Logo, texto, etiqueta y @ están todos en el área central. «Ejemplo ficticio» aparece dentro del teléfono; no hay barra fija de fuentes. Referencias FTC y NIST permanecen en caption.txt. El QR mantiene su etiqueta ilustrativa. El flag de borrador solo cambia el rótulo: no otorga aprobación editorial.
 
-## Respaldo editorial
+H.264, yuv420p de rango limitado, AAC cuando hay audio y MP4 faststart. El rango limitado se convierte explícitamente para evitar que las capturas JPEG produzcan yuvj420p. Sin escalado desde 540p. Se valida resolución, duración 17–21 s, fps, bitrate real de video >=4 Mbps, audio esperado, orden moov/mdat y decodificación de todo el archivo. Se usa ffprobe si existe; si no, FFmpeg/MoviePy ya incluidos. Un fallo no promociona el .partial.mp4 al archivo final.
 
-- [FTC: reconocer phishing](https://consumer.ftc.gov/articles/how-recognize-avoid-phishing-scams):
-  enlaces y adjuntos como señuelos; comprobar solicitudes mediante un contacto conocido,
-  no con los datos incluidos en el mensaje.
-- [FTC: códigos QR](https://consumer.ftc.gov/consumer-alerts/2023/12/scammers-hide-harmful-links-qr-codes-steal-your-information):
-  pueden dirigir a sitios falsos; recomienda verificar mediante canales conocidos.
-- [NIST: phishing](https://www.nist.gov/itl/smallbusinesscyber/guidance-topic/phishing):
-  incluye llamadas, además de mensajes y otras vías de contacto.
+La voz se mide por escena y se completa con silencio si sobra tiempo. Si dura más, se amplía la escena y se registra aviso, nunca se recorta ni se acelera. Si la duración total supera 21 s, el comando falla y hay que acortar la narración o revisar las duraciones en el JSON. Un fallo de Edge aborta: no usa Gemini ni devuelve un falso «reel con voz».
 
-## Generar
+## Ejecución local
+
+Desde la raíz del repositorio:
 
 ```powershell
-.venv\Scripts\python.exe scripts/build_phishing_myth.py --render
-.venv\Scripts\python.exe scripts/build_phishing_myth.py --voice --render
-.venv\Scripts\python.exe -m unittest discover -s scripts -p test_phishing_myth.py
+.venv/Scripts/python.exe scripts/build_phishing_myth.py --render
+$env:REEL_AUDIO="voice"
+.venv/Scripts/python.exe scripts/build_phishing_myth.py --render
 ```
 
-`--voice` solicita Gemini TTS mediante la integración del proyecto y consume cuota.
-En la prueba del 19/10/2026, el proveedor rechazó la narración con HTTP 429.
-La entrega actual es por tanto un animatic SIN VOZ, no un reel narrado terminado.
-No clona voces ni cambia de proveedor si falla. Reutiliza su caché cuando texto,
-voz y ajustes coinciden. Un rechazo seguro del adaptador se anota en `timing.json`;
-en ese caso se genera solo una vista sin voz identificada como tal. No se usa un
-audio antiguo como si fuera la nueva locución.
+Salidas separadas por modo: `cyberpulse-bot/media/reels/phishing-myth-v3/none/`, `voice/`, `music/`. Cada una incluye preview.html, caption.txt, timing.json, escenas PNG, visual-checks.json, verification.json y reel-MODO.mp4 si la verificación termina bien. Los archivos generados no se versionan.
 
-Salida actual en `cyberpulse-bot/media/reels/phishing-myth-v2/`: vista HTML, storyboard,
-caption, tiempos y MP4 de revisión 540×960 / 24 fps. Si hay voz, también WAV y MP4
-con audio AAC. La vista HTML incorpora audio y fuentes para reproducirse sin servidor.
-Los textos breves de pantalla son titulares, no una transcripción por palabra.
+## Docker aislado, sin iniciar el bot
 
-Revisar voz y duración, lectura móvil, transiciones, precisión y cierre antes de
-exportar la entrega final 1080×1920. Nada se conecta al publicador del bot.
+Docker está apagado en la máquina de revisión. No se ha ejecutado dentro de Docker ni se ha arrancado el stack de producción. Cuando Docker esté disponible, ejecutar desde `cyberpulse-bot/`. No usar `docker compose up` para esta prueba.
 
-## Pulido visual v2
+```powershell
+docker build -t cyberpulse-reels:local .
+docker run --rm --init --entrypoint python -e DRY_RUN=true -e PUBLICAR_EN_X=false -e REEL_AUDIO=none --mount "type=bind,source=$((Get-Location).Path)/media,target=/bot/media" cyberpulse-reels:local -m app.reels.myth --render
+```
 
-La carpeta `phishing-myth-v1` conserva el primer montaje para comparar.
-El guion, las fuentes y los 29 segundos provisionales no cambian.
+Para voz, usar el mismo comando sustituyendo `-e REEL_AUDIO=none` por `-e REEL_AUDIO=voice`. Requiere acceso de red a Edge TTS; no requiere .env ni credenciales de Meta/Gemini.
 
-- Cursor cian situado bajo el enlace según su posición real; no cubre sus letras.
-- Se retira «PAUSA», que podía confundirse con un botón de la interfaz.
-- Entrada breve de titulares; teléfono con desplazamiento y acercamiento suaves;
-  documento con micromovimiento; llamada con oscilación; barrido del QR dentro del
-  icono y aparición escalonada de las tarjetas del cierre.
-- Mensaje en superficie marino/cian con la misma familia tipográfica y bordes del
-  resto de las tarjetas, sin el bloque claro de la v1.
-- Disclaimer más contrastado y con fondo propio, separado al menos 24 píxeles
-  del pie en la vista de revisión 540×960. El pie de marca queda en segundo plano.
-- Se conserva el control «SIN VOZ · BORRADOR»: esta NO es la exportación final.
-  Retirarlo solo en una entrega aprobada para publicación, con o sin voz; no retirar
-  los disclaimers editoriales ni presentar tiempos estimados como sincronizados.
+Para música, colocar un archivo propio/autorizado en `media/reels/musica-propia.wav`, sustituir el modo por `-e REEL_AUDIO=music` y agregar `-e REEL_MUSIC_PATH=/bot/media/reels/musica-propia.wav`. No se descarga música ni se distribuye una pista comercial.
 
-El renderer comprueba cursor/enlace y separación del pie cada 0,25 segundos;
-también verifica cambios de movimiento dentro de cada escena y que volver al mismo
-tiempo produzca el mismo estado. Guarda el resultado en `visual-checks.json`.
-No se hace una nueva petición de voz durante este pulido; el límite 429 sigue pendiente.
+Verificar una salida sin red ni render:
+
+```powershell
+docker run --rm --init --entrypoint python --mount "type=bind,source=$((Get-Location).Path)/media,target=/bot/media" cyberpulse-reels:local -m app.reels.check /bot/media/reels/phishing-myth-v3/none/reel-none.mp4 --audio none --duration 19
+```
+
+Estos comandos sobrescriben la entrada del contenedor y no cargan .env. El Dockerfile normal conserva su CMD de producción; nunca ejecutar esta imagen sin el override para una revisión.
+
+## Pruebas y limitaciones reales
+
+`cyberpulse-bot/tests/test_reel_myth.py`: ajustes, zonas, caption, voz completa sin recorte, rechazo de exceso de duración y música local de baja ganancia. `scripts/test_phishing_myth.py` conserva el acceso compatible, actualizado al contrato de 19 s y fallo cerrado de voz. Los tests del piloto anterior de contraseñas no cambian.
+
+Render de integración opcional, sin servicio TTS: desde cyberpulse-bot, `REEL_EXPORT_TEST=1 python -m pytest tests/test_reel_myth.py -k native_voice` (en PowerShell establecer la variable antes). Usa tonos propios para simular la respuesta del proveedor y comprobar el montaje, no una narración real.
+
+En la prueba de esta iteración, el catálogo de Edge confirmó es-DO-EmilioNeural, pero la síntesis fue rechazada con HTTP 403. No se afirma que la variante de voz real esté aceptada hasta conseguir una síntesis y escucharla. Un montaje de prueba con TTS simulado no acredita que el servicio externo funcione. La prueba de music usa un tono local propio, no una canción lista para publicar.
+
+Resultados locales: 231 pruebas de backend pasan, una integración opt-in omitida en la suite normal; esa integración se ejecutó aparte y pasó. Las nueve pruebas de scripts también pasan. Ruff y diff sin errores. Exportaciones none y music: 1080×1920, 19 s, 24 fps, H.264 yuv420p, bitrate de video observado 4,948 Mbps y AAC en music. Verificación visual en 77 tiempos: área segura entre y=269 e y=1440, bucle con igualdad de frames y ventanas de movimiento inferiores a 1,5 s. Si se solicita el mínimo de 4 Mbps, el encoder usa objetivo mínimo de 4,1 Mbps para compensar el arranque del VBV; la aceptación exige medir al menos 4 Mbps reales.
