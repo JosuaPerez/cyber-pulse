@@ -1,5 +1,12 @@
 # CyberPulse · hoja de ruta editorial propuesta
 
+## Plan vigente propuesto · 25/10/2026
+
+El [piloto del 26 de octubre al 8 de noviembre](content/calendario-2026-10-26.md)
+prioriza tres reels y un carrusel por semana, con historias y medición comparable.
+Es una propuesta sin programación ni cambios al bot. Los calendarios siguientes
+se conservan como historial y no son la planificación futura vigente.
+
 ## Paquete de revisión actual · 18/10/2026
 
 Las alertas v3 ya están activas. El siguiente bloque es el reel de paquetería,

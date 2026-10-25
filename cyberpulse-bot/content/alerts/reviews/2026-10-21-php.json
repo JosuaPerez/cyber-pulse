@@ -1,0 +1,52 @@
+{
+  "id": "php-2026-10-21",
+  "source_name": "PHP · Aviso oficial",
+  "source_url": "https://www.php.net/archive/2026.php",
+  "source_date": "21/10/2026",
+  "reviewed_at_utc": "2026-10-21T22:43:11Z",
+  "publication_status": "pending_user_review",
+  "sources": [
+    {"url": "https://www.php.net/archive/2026.php", "supports": "Versiones corregidas, alcance web y paquetes del proveedor; actualización como solución completa."},
+    {"url": "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w", "supports": "CVE-2026-109618: fallo de memoria; ejecución remota sin autenticación demostrada en mod_php; condiciones según entorno."},
+    {"url": "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp", "supports": "CVE-2026-109619: estado de peticiones anteriores; distintas rutas y condiciones; no hay mitigación genérica completa."},
+    {"url": "https://www.enisa.europa.eu/news/joint-statement-on-critical-php-vulnerabilities", "supports": "Priorizar sistemas expuestos y coordinar con hosting/proveedores."},
+    {"url": "https://patchstack.com/articles/php-major-vulnerability-alert-10-2026/", "supports": "Patchstack atribuye los reportes de explotación activa a sus socios de hosting; no es prueba de compromiso de cada instalación."}
+  ],
+  "editorial_notes": [
+    "No se utiliza un apodo no necesario: solo PHP e identificadores oficiales.",
+    "Prueba técnica no equivale a víctimas confirmadas. Patchstack reporta avisos de explotación de sus socios de hosting; se conserva esa atribución, sin generalizarla a todas las webs.",
+    "La severidad crítica coincide con los avisos oficiales. Se conservan las condiciones de instalación.",
+    "No recomendar memory_limit=-1 como arreglo universal: la fuente advierte que no sustituye la actualización."
+  ],
+  "visual": {"tipo": "editorial", "clase": "comparacion", "nodos": ["PHP de tu servidor", "Parche del proveedor"]},
+  "analysis": {
+    "es_relevante": true,
+    "motivo_descarte": "",
+    "tipo_noticia": "vulnerabilidad",
+    "severidad": "critical",
+    "estado_explotacion": "explotacion_activa",
+    "temporalidad": "vigencia_no_confirmada",
+    "evidencia_explotacion": "Patchstack has received reports of active exploitation from multiple hosting partners.",
+    "evidencia_temporal": "",
+    "evidencia_identidad": [],
+    "cves": ["CVE-2026-109618", "CVE-2026-109619"],
+    "nombre_vulnerabilidad": "",
+    "boletin_proveedor": "",
+    "portada_titulo": "¿Tu web usa PHP? Actualiza ahora",
+    "resumen_hallazgo": "Dos fallos permiten ejecutar código sin iniciar sesión en servidores vulnerables.",
+    "nota_vigencia": "Parches disponibles. Patchstack reporta avisos de explotación de sus socios de hosting.",
+    "hecho_documentado": "Versiones corregidas: PHP 8.2.35, 8.3.36, 8.4.27 y 8.5.12.",
+    "a_quien_concierne": "Para quienes mantienen webs, servidores y hosting con PHP. Comprueba la rama que sirve tu web y si tu proveedor ya distribuyó el parche.",
+    "detalle_analisis": "Un fallo afecta al manejo de errores de memoria; el otro conserva datos internos de una petición anterior. Las rutas de ataque dependen del servidor y su configuración.",
+    "lo_que_no_podemos_concluir": "Usar PHP no demuestra que tu web haya sido comprometida.",
+    "audiencia": "administradores",
+    "acciones": [
+      {"rol": "para_ti_admin", "texto": "Actualiza tu rama de PHP a la versión corregida o al paquete parcheado de tu proveedor.", "orientacion_general": false, "evidencia": "https://www.php.net/archive/2026.php · How to update"},
+      {"rol": "para_equipos_ti", "texto": "Reinicia los procesos de PHP y confirma la versión que está atendiendo tu web.", "orientacion_general": false, "evidencia": "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w · Mitigation"},
+      {"rol": "para_ti", "texto": "Si tu web usa hosting gestionado, pide confirmación de que el parche está aplicado.", "orientacion_general": false, "evidencia": "https://www.enisa.europa.eu/news/joint-statement-on-critical-php-vulnerabilities"}
+    ],
+    "caption": "¿Tu web usa PHP? El proyecto publicó correcciones el 21/10: 8.2.35, 8.3.36, 8.4.27 y 8.5.12. Los fallos CVE-2026-109618 y CVE-2026-109619 pueden permitir ejecutar código sin iniciar sesión, según el entorno. Las versiones antiguas pueden requerir paquetes parcheados del proveedor o migración. Actualizar solo el CMS no sustituye corregir PHP. Las medidas temporales no son una solución completa. Guarda esta alerta y confirma el parche con tu hosting. ¿Quién mantiene PHP en tu sitio?",
+    "hashtags": ["#Ciberseguridad", "#PHP", "#SeguridadWeb", "#CyberPulse"],
+    "evidencias": ["PHP · Aviso de seguridad del 21/10/2026", "GHSA-w8hw-w9fx-j79w", "GHSA-6wmf-4rv5-p3rp"]
+  }
+}
