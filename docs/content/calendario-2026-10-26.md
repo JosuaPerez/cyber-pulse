@@ -12,6 +12,19 @@ Objetivo de producción: 3 reels + 1 carrusel por semana, con 2–3 historias de
 
 Ventana inicial propuesta: 19:00 hora de Nueva York para las ocho piezas, elegida por organización, no como «mejor hora». Registrar hora real y no cambiar horario, duración y estilo simultáneamente para explicar después el resultado. El cambio horario del 1 de noviembre cambia el desfase UTC: conservar hora local, no fijar un único UTC para todo el piloto. No hay scheduler creado.
 
+### Horarios de publicación propuestos
+
+| Formato | Días del piloto | Hora de Nueva York | República Dominicana |
+| --- | --- | --- | --- |
+| Reel | Lunes, miércoles y viernes | 19:00 | 19:00 hasta el 31/10; 20:00 desde el 01/11 |
+| Carrusel útil | Jueves | 19:00 | 19:00 hasta el 31/10; 20:00 desde el 01/11 |
+| Historia que acompaña una pieza | Mismo día de la pieza | 19:15 | 19:15 hasta el 31/10; 20:15 desde el 01/11 |
+| Historias independientes | Martes y sábado, si están listas | 19:00 | 19:00 hasta el 31/10; 20:00 desde el 01/11 |
+
+No son horarios óptimos demostrados. La audiencia histórica tenía una proporción importante en República Dominicana, pero su distribución actual y actividad horaria requieren Insights recientes. Solicitar captura de «Momentos de más actividad» y zona horaria del dispositivo antes de ajustar. Si los datos sugieren otra ventana, registrar el cambio y tratarlo como una nueva prueba; no garantizar más alcance. Las noticias urgentes verificadas no esperan este horario.
+
+Este calendario fija horas editoriales, no ejecuta envíos. Crear tareas programadas o modificar horarios del bot es un paso separado con aprobación y comprobación de duplicados.
+
 ## Calendario diario
 
 | Fecha | Pieza / actividad | Gancho propuesto | Acción o apoyo | Estado y dependencia |
