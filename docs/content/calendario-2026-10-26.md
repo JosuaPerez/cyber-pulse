@@ -1,6 +1,6 @@
 # CyberPulse · piloto de contenido · 26 octubre–8 noviembre de 2026
 
-Preparado: 25/10/2026. Zona horaria: America/New_York.
+Preparado: 25/10/2026. Zona editorial: America/Santo_Domingo (República Dominicana, UTC−4), por residencia confirmada de Josua.
 Estado: propuesta operativa, sin publicaciones programadas ni cambios al bot.
 Sustituye como planificación futura los calendarios de octubre anteriores; no modifica su historial.
 
@@ -10,18 +10,20 @@ Dar más oportunidades a reels educativos originales para descubrimiento y mante
 
 Objetivo de producción: 3 reels + 1 carrusel por semana, con 2–3 historias de apoyo en días de publicación y preguntas entre piezas. Si falta capacidad, reducir a 2 reels + 1 carrusel, sin sustituir rigor por frecuencia. No comprar seguidores, automatizar comentarios o perseguir audios ajenos al tema.
 
-Ventana inicial propuesta: 19:00 hora de Nueva York para las ocho piezas, elegida por organización, no como «mejor hora». Registrar hora real y no cambiar horario, duración y estilo simultáneamente para explicar después el resultado. El cambio horario del 1 de noviembre cambia el desfase UTC: conservar hora local, no fijar un único UTC para todo el piloto. No hay scheduler creado.
+Ventana inicial propuesta: 19:00 de República Dominicana para las ocho piezas, elegida por organización, no como «mejor hora». Registrar hora real y no cambiar horario, duración y estilo simultáneamente para explicar después el resultado. República Dominicana mantiene UTC−4 durante este piloto: 19:00 equivale a 23:00 UTC. El cambio de hora de Nueva York del 1 de noviembre no cambia la hora editorial dominicana. No hay scheduler creado.
 
 ### Horarios de publicación propuestos
 
-| Formato | Días del piloto | Hora de Nueva York | República Dominicana |
+| Formato | Días del piloto | República Dominicana | Equivalencia en Nueva York |
 | --- | --- | --- | --- |
-| Reel | Lunes, miércoles y viernes | 19:00 | 19:00 hasta el 31/10; 20:00 desde el 01/11 |
-| Carrusel útil | Jueves | 19:00 | 19:00 hasta el 31/10; 20:00 desde el 01/11 |
-| Historia que acompaña una pieza | Mismo día de la pieza | 19:15 | 19:15 hasta el 31/10; 20:15 desde el 01/11 |
-| Historias independientes | Martes y sábado, si están listas | 19:00 | 19:00 hasta el 31/10; 20:00 desde el 01/11 |
+| Reel | Lunes, miércoles y viernes | 19:00 | 19:00 hasta el 31/10; 18:00 desde el 01/11 |
+| Carrusel útil | Jueves | 19:00 | 19:00 hasta el 31/10; 18:00 desde el 01/11 |
+| Historia que acompaña una pieza | Mismo día de la pieza | 19:15 | 19:15 hasta el 31/10; 18:15 desde el 01/11 |
+| Historias independientes | Martes y sábado, si están listas | 19:00 | 19:00 hasta el 31/10; 18:00 desde el 01/11 |
 
 No son horarios óptimos demostrados. La audiencia histórica tenía una proporción importante en República Dominicana, pero su distribución actual y actividad horaria requieren Insights recientes. Solicitar captura de «Momentos de más actividad» y zona horaria del dispositivo antes de ajustar. Si los datos sugieren otra ventana, registrar el cambio y tratarlo como una nueva prueba; no garantizar más alcance. Las noticias urgentes verificadas no esperan este horario.
+
+La captura de perfil aportada el 25/10 muestra 29 seguidores y 100 publicaciones; no incluye actividad por hora. Si la app no ofrece todavía ese desglose, registrar N/D y mantener la prueba sin inventar datos ni asumir que toda la audiencia comparte la ubicación del creador.
 
 Este calendario fija horas editoriales, no ejecuta envíos. Crear tareas programadas o modificar horarios del bot es un paso separado con aprobación y comprobación de duplicados.
 
