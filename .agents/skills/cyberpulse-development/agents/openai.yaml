@@ -1,0 +1,4 @@
+interface:
+  display_name: "CyberPulse Development"
+  short_description: "Cambios seguros y comprobados en el proyecto CyberPulse"
+  default_prompt: "Usa $cyberpulse-development para implementar este cambio en CyberPulse y verificarlo sin activar publicaciones."

@@ -1,0 +1,54 @@
+{
+  "id": "emudhra-2026-10-21",
+  "source_name": "Google · Chrome Security",
+  "source_url": "https://blog.google/security/protecting-chrome-and-android-users-from-compromised-emudhra-intermediate-ca-certificates/",
+  "source_date": "20/10/2026",
+  "reviewed_at_utc": "2026-10-21T22:43:11Z",
+  "publication_status": "pending_user_review",
+  "sources": [
+    {"url": "https://blog.google/security/protecting-chrome-and-android-users-from-compromised-emudhra-intermediate-ca-certificates/", "supports": "Ocho certificados intermedios, claves débiles, bloqueos Chrome/Android y retirada prevista de la raíz el 27/10."},
+    {"url": "https://www.mozilla.org/en-US/security/advisories/mfsa2026-111/", "supports": "Bloqueo OneCRL distribuido el 17/10 y Firefox 158.0.1 para cubrir clientes sin RemoteSettings."},
+    {"url": "https://emudhra.com/en/post/certificate-security-incident", "supports": "Declaración del proveedor actualizada el 21/10: alcance en intermediarias, no en las claves raíz; investigación en curso."},
+    {"url": "https://blog.mozilla.org/security/2026/10/20/protecting-firefox-users-following-the-compromise-of-emudhra-intermediate-certificates/", "supports": "Contexto de suplantación si un atacante puede interceptar la conexión; fuente indexada, apertura directa bloqueada durante esta revisión."}
+  ],
+  "editorial_notes": [
+    "eMudhra es una certificadora de India; el alcance de confianza es internacional, no una filtración general de contraseñas en India.",
+    "No se afirma que HTTPS haya dejado de funcionar ni que todo tráfico cifrado pueda leerse retroactivamente.",
+    "Google indica protección por bloqueo y transparencia de certificados para los clientes correspondientes. No se extrapola esa protección a todas las apps.",
+    "No se asigna un CVE único a todo el incidente ni se copia el de Go o Firefox. Prioridad editorial alta; no es una puntuación CVSS del caso.",
+    "La retirada de la raíz del 27/10 es una previsión anunciada, no un hecho ya ocurrido al preparar esta pieza.",
+    "Se omite la cronología exacta de revocación del proveedor: las fuentes consultadas difieren. El dato no es necesario para las medidas.",
+    "El aviso de CERT-In consultado mostraba última actualización 22/10; no se usa para sostener hechos nuevos como si estuvieran confirmados al corte del 21/10."
+  ],
+  "visual": {"tipo": "editorial", "clase": "comparacion", "nodos": ["Certificados afectados", "Protección del cliente"]},
+  "analysis": {
+    "es_relevante": true,
+    "motivo_descarte": "",
+    "tipo_noticia": "incidente",
+    "severidad": "high",
+    "estado_explotacion": "desconocido",
+    "temporalidad": "vigencia_no_confirmada",
+    "evidencia_explotacion": "",
+    "evidencia_temporal": "",
+    "evidencia_identidad": [],
+    "cves": [],
+    "nombre_vulnerabilidad": "",
+    "boletin_proveedor": "",
+    "portada_titulo": "eMudhra: claves débiles en certificados",
+    "resumen_hallazgo": "Claves débiles de una certificadora de India podían facilitar suplantar webs en clientes sin protección.",
+    "nota_vigencia": "Chrome y Firefox ya distribuyeron bloqueos. No todos los clientes se actualizan igual.",
+    "hecho_documentado": "Ocho certificados intermedios tenían claves débiles; no son contraseñas personales.",
+    "a_quien_concierne": "Para quienes navegan y para equipos que mantienen certificados. Apps y dispositivos con listas de confianza propias deben revisar sus actualizaciones.",
+    "detalle_analisis": "Si un atacante intercepta la conexión y el cliente aún confía en esos certificados, podría suplantar una web. El incidente afecta a la confianza en certificados, no a tus claves personales.",
+    "lo_que_no_podemos_concluir": "La debilidad de estas claves no demuestra que tus cuentas hayan sido atacadas.",
+    "audiencia": "mixta",
+    "acciones": [
+      {"rol": "para_ti", "texto": "Instala las actualizaciones de seguridad de tu navegador, sistema y aplicaciones.", "orientacion_general": false, "evidencia": "https://www.mozilla.org/en-US/security/advisories/mfsa2026-111/"},
+      {"rol": "para_equipos_ti", "texto": "Sustituye certificados que dependan de emSign ECC Root CA - G3 por una cadena no afectada.", "orientacion_general": false, "evidencia": "https://blog.google/security/protecting-chrome-and-android-users-from-compromised-emudhra-intermediate-ca-certificates/"},
+      {"rol": "para_ti_admin", "texto": "Revisa también las aplicaciones y dispositivos que mantienen su propia lista de confianza.", "orientacion_general": false, "evidencia": "Google · Protección de consumidores del Chrome Root Store que no reciben CRLSet"}
+    ],
+    "caption": "eMudhra, certificadora de India: ocho certificados intermedios tenían claves débiles. No es una filtración de tus contraseñas. Chrome y Firefox ya distribuyeron bloqueos; otras apps pueden necesitar actualizaciones propias. Google prevé retirar emSign ECC Root CA - G3 de su almacén el 27/10/2026: si tu web depende de esa raíz, sustituye el certificado por una cadena no afectada. El riesgo depende del cliente y de la conexión. ¿Tu equipo revisa también sus listas de confianza?",
+    "hashtags": ["#Ciberseguridad", "#eMudhra", "#SeguridadDigital", "#CyberPulse"],
+    "evidencias": ["Google · Chrome and Android Security Teams · 20/10/2026", "Mozilla · MFSA 2026-111", "eMudhra · Statement · actualizado 21/10/2026"]
+  }
+}

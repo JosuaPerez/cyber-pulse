@@ -1,0 +1,2 @@
+# Runtime aislado del reel; no cambia requirements.txt del bot.
+edge-tts==7.3.1

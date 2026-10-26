@@ -1,6 +1,31 @@
 # CyberPulse · hoja de ruta editorial propuesta
 
+## Plan vigente propuesto · 25/10/2026
+
+El [piloto del 26 de octubre al 8 de noviembre](content/calendario-2026-10-26.md)
+prioriza tres reels y un carrusel por semana, con historias y medición comparable.
+Es una propuesta sin programación ni cambios al bot. Los calendarios siguientes
+se conservan como historial y no son la planificación futura vigente.
+
+## Paquete de revisión actual · 18/10/2026
+
+Las alertas v3 ya están activas. El siguiente bloque es el reel de paquetería,
+la guía breve y el calendario fechado, en [el paquete editorial](content/2026-10-paquetes.md).
+La [vista previa](content/paquetes-preview.html) muestra una apertura muda de cinco
+segundos y el primer arte de la guía, no aprobado. La [propuesta editorial v2](content/paquetes-editorial-v2.html)
+lo sustituye para revisión, sin borrar el historial. No están publicados ni programados; la voz y el reel
+completo se producen después de revisar la apertura.
+
 ## Orden de trabajo
+
+Guion nuevo aportado por Josua: [Mito vs. mecanismo · sin clic](content/reel-phishing-myth.md).
+Es una pieza educativa general con teléfono animado, no una alerta de campaña.
+Su producción y revisión no implican cambiar el calendario ni publicar automáticamente.
+
+Nueva serie aprobada para preparar un piloto: [CyberPulse Lab / 001](content/cyberpulse-lab-git-history.md),
+demostración local de una credencial ficticia que permanece en un commit anterior.
+El primer montaje es sin voz para revisión. Se suma a las otras series; no desplaza
+las alertas ni cambia automáticamente las fechas de paquetería.
 
 1. Consolidar alertas diarias con opción A y revisar el cambio antes de activarlo.
 2. Producir el reel educativo de mensaje de paquetería: guion, animatic de cinco

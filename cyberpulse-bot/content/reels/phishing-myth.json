@@ -1,0 +1,20 @@
+{
+  "id": "phishing-myth",
+  "series": "Mito vs. mecanismo",
+  "title": "Si no doy clic, no pasa nada",
+  "status": "Borrador educativo para revisión; no publicar automáticamente",
+  "sources": [
+    "https://consumer.ftc.gov/articles/how-recognize-avoid-phishing-scams",
+    "https://consumer.ftc.gov/consumer-alerts/2023/12/scammers-hide-harmful-links-qr-codes-steal-your-information",
+    "https://www.nist.gov/itl/smallbusinesscyber/guidance-topic/phishing"
+  ],
+  "caption": "No abrir enlaces sospechosos ayuda, pero no es la única precaución. Un engaño también puede pedirte abrir un adjunto, entregar datos en una llamada o seguir instrucciones en una web a la que llegaste desde un QR. Antes de actuar, verifica la petición por un canal que ya conozcas: abre por tu cuenta la app oficial o utiliza un contacto previamente verificado, no el que te facilite el mensaje. Escanear un QR no demuestra por sí solo una infección. Los ejemplos de este vídeo son ficticios; no describen una campaña actual. Guarda este recordatorio. Fuentes: https://consumer.ftc.gov/articles/how-recognize-avoid-phishing-scams · https://consumer.ftc.gov/consumer-alerts/2023/12/scammers-hide-harmful-links-qr-codes-steal-your-information · https://www.nist.gov/itl/smallbusinesscyber/guidance-topic/phishing",
+  "scenes": [
+    {"duration": 2, "view": "hook", "headline": "No hacer clic no siempre te salva", "narration": "Sin clic, ¿a salvo?", "detail": "El engaño puede pedirte otra acción.", "phone_title": "SMS", "message": "Confirma tus datos para continuar.", "link": "Revisar solicitud →"},
+    {"duration": 3, "view": "attachment", "option_label": "adjunto", "headline": "Un adjunto inesperado", "narration": "Un adjunto inesperado.", "detail": "Comprueba quién te lo envía.", "visual_title": "Documento inesperado", "visual_detail": "Solicitud de permisos", "permission": "¿Activar macros?", "filename": "documento-ejemplo.xlsm"},
+    {"duration": 3, "view": "call", "option_label": "llamada", "headline": "Una llamada que pide datos", "narration": "Una llamada que pide datos.", "detail": "Confirma por un contacto conocido.", "visual_title": "«Dime tus datos»", "visual_detail": "Ejemplo ficticio"},
+    {"duration": 3, "view": "qr", "option_label": "QR", "headline": "Un QR hacia una web falsa", "narration": "Una web falsa tras un QR.", "detail": "El escaneo no prueba una infección.", "visual_title": "Web que pide datos", "visual_detail": "Ilustrativo · no escaneable", "example_url": "verifica-tu-cuenta.invalid/datos"},
+    {"duration": 5, "view": "verify", "headline": "Verifica por otro canal", "narration": "Verifica por otro canal. Abre la app oficial por tu cuenta.", "detail": "Abre la app oficial por tu cuenta.", "phone_title": "Canal independiente", "message": "Revisa tu cuenta o tu pedido.", "link": "App oficial"},
+    {"duration": 3, "view": "cta", "headline": "Guárdalo", "narration": "Guárdalo. ¿Te ha pasado?", "detail": "¿Cuál te ha llegado alguna vez?", "follow": "Sigue la serie Mito vs. mecanismo"}
+  ]
+}

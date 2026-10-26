@@ -1,0 +1,15 @@
+{
+  "id": "git-history",
+  "series": "CyberPulse Lab",
+  "title": "Borraste la clave. ¿Y el historial?",
+  "status": "Borrador de laboratorio, pendiente de voz y revisión",
+  "sources": ["https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository"],
+  "caption": "Borrar una credencial del archivo actual no la elimina de los commits anteriores. En este laboratorio local usamos un valor ficticio, sin acceso a ningún servicio, para mostrar la diferencia. Si una credencial real quedó expuesta, revócala o rótala; después evalúa la limpieza del historial y las copias con tu equipo. No basta con borrar el texto. Guarda esta demostración para revisar tus próximos commits. Fuente: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository",
+  "scenes": [
+    {"duration": 4, "label": "EL ERROR", "title": "Borraste la clave.", "accent": "¿Y el historial?", "narration": "Borraste la clave del archivo. ¿También desapareció del historial?", "view": "comparison", "takeaway": "Archivo actual ≠ historial"},
+    {"duration": 6, "label": "LABORATORIO LOCAL", "title": "Hoy ya no está.", "accent": "Mira este archivo.", "narration": "Este archivo ya no contiene la credencial. El valor del ejemplo es ficticio.", "view": "current", "takeaway": "El archivo actual no contiene la clave de prueba."},
+    {"duration": 6, "label": "LA COMPROBACIÓN", "title": "Un commit atrás…", "accent": "Sigue guardada.", "narration": "Pero un commit anterior todavía conserva la clave. Borrarla en un commit nuevo no borra el pasado.", "view": "previous", "takeaway": "El historial conserva la versión anterior."},
+    {"duration": 8, "label": "SI ERA UNA CLAVE REAL", "title": "Revoca o rota.", "accent": "Borrar no basta.", "narration": "Si era una clave real expuesta, revócala o rótala. Después evalúa la limpieza del historial y sus copias con tu equipo.", "view": "remediation", "takeaway": "La limpieza del historial requiere coordinación."},
+    {"duration": 3, "label": "CYBERPULSE LAB", "title": "Antes de tu commit…", "accent": "Revisa qué subes.", "narration": "Guarda este ejemplo y revisa qué subes.", "view": "checklist", "takeaway": "Guárdalo para tu próximo proyecto."}
+  ]
+}

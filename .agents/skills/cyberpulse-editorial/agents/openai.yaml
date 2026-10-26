@@ -1,0 +1,4 @@
+interface:
+  display_name: "CyberPulse Editorial"
+  short_description: "Noticias verificadas y contenido claro para CyberPulse"
+  default_prompt: "Usa $cyberpulse-editorial para preparar una noticia de CyberPulse con fuentes, límites y acciones útiles."
